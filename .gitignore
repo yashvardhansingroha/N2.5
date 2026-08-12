@@ -1,0 +1,11 @@
+.streamlit/secrets.toml
+__pycache__/
+.pytest_cache/
+.pytest_tmp*/
+*.py[cod]
+air_quality_cache.sqlite
+air_quality_cache.sqlite-shm
+air_quality_cache.sqlite-wal
+model_cache/
+streamlit.out.log
+streamlit.err.log
