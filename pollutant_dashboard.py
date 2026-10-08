@@ -23,9 +23,11 @@ def save_result(analysis: dict[str, Any], extra: dict[str, Any] | None = None) -
             existing = json.loads(RESULTS_FILE.read_text(encoding="utf-8"))
         except (ValueError, OSError):
             existing = {}
-    existing.setdefault("analyses", {})[
-        f"{analysis['pollutant'].source}:{analysis['pollutant'].key}"
-    ] = {**summary_json(analysis), **(extra or {})}
+    identity = f"{analysis['pollutant'].source}:{analysis['pollutant'].key}"
+    updated = {**summary_json(analysis), **(extra or {})}
+    if existing.get("analyses", {}).get(identity) == updated:
+        return
+    existing.setdefault("analyses", {})[identity] = updated
     existing["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
     RESULTS_FILE.write_text(json.dumps(existing, indent=2, default=str) + "\n", encoding="utf-8")
 

@@ -8,6 +8,7 @@ import pytest
 import pollutant_pipeline as pipeline
 import station_archive as station
 import archived_forecast_weather as archived
+import pollutant_dashboard as dashboard
 
 
 def sample_daily(start: date, count: int, target: str = "CAMS_PM2.5") -> pd.DataFrame:
@@ -346,3 +347,17 @@ def test_development_artifact_reuse_and_invalidation(monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline, "RIDGE_ALPHA", 11.0)
     pipeline.evaluate_development(changed, pollutant, date(2025, 6, 1), tmp_path)
     assert len(calls) == 3
+
+
+def test_result_snapshot_is_not_rewritten_without_new_analysis(monkeypatch, tmp_path):
+    path = tmp_path / "results.json"
+    monkeypatch.setattr(dashboard, "RESULTS_FILE", path)
+    monkeypatch.setattr(dashboard, "summary_json", lambda analysis: {"mae": analysis["mae"]})
+    analysis = {"pollutant": pipeline.CAMS_POLLUTANTS["PM10"], "mae": 10.0}
+    dashboard.save_result(analysis)
+    first = path.read_bytes()
+    dashboard.save_result(analysis)
+    assert path.read_bytes() == first
+    analysis["mae"] = 9.0
+    dashboard.save_result(analysis)
+    assert path.read_bytes() != first
