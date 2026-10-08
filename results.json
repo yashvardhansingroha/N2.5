@@ -1,0 +1,2527 @@
+{
+  "analyses": {
+    "CAMS modeled:PM2.5": {
+      "source": "CAMS modeled",
+      "pollutant": "PM2.5",
+      "threshold_ug_m3": 60.0,
+      "date_start": "2021-10-09",
+      "date_end": "2026-10-08",
+      "calendar_days": 1826,
+      "valid_days": 1526,
+      "production_training_rows": 1525,
+      "final_train_rows": 1345,
+      "final_test_start": "2026-04-12",
+      "final_scored_days": 180,
+      "development_windows": 11,
+      "development_median_mae": {
+        "Climatology": 26.83975298987434,
+        "Persistence": 15.249930555555556,
+        "Random Forest": 16.011560417309667,
+        "Ridge": 13.593334140762858,
+        "Seven-day mean": 18.90170634920635
+      },
+      "development_results": [
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 8.0363194444,
+          "Recall": 0.0,
+          "Exceedance rate": 0.0666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 10.0436210317,
+          "Recall": 0.0,
+          "Exceedance rate": 0.0666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 14.8526125534,
+          "Recall": 0.25,
+          "Exceedance rate": 0.0666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 12.7133221305,
+          "Recall": 0.75,
+          "Exceedance rate": 0.0666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 7.7722919923,
+          "Recall": 0.75,
+          "Exceedance rate": 0.0666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 15.2499305556,
+          "Recall": 0.9591836735,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 18.9017063492,
+          "Recall": 0.9183673469,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 27.2845495882,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 13.5933341408,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 17.091374737,
+          "Recall": 0.9795918367,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 20.229375,
+          "Recall": 0.9433962264,
+          "Exceedance rate": 0.8833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 27.5303968254,
+          "Recall": 0.9433962264,
+          "Exceedance rate": 0.8833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 26.8397529899,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 14.8361065716,
+          "Recall": 0.9811320755,
+          "Exceedance rate": 0.8833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 17.849776406,
+          "Recall": 0.9811320755,
+          "Exceedance rate": 0.8833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 5.8246527778,
+          "Recall": 0.625,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 7.8631448413,
+          "Recall": 0.0,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 12.25610348,
+          "Recall": 0.25,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 8.9179819392,
+          "Recall": 0.125,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 7.3304831106,
+          "Recall": 0.125,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 9.3536805556,
+          "Recall": 0.7,
+          "Exceedance rate": 0.1666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 12.5576587302,
+          "Recall": 0.1,
+          "Exceedance rate": 0.1666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 14.6229647186,
+          "Recall": 0.0,
+          "Exceedance rate": 0.1666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 11.2246466612,
+          "Recall": 1.0,
+          "Exceedance rate": 0.1666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 8.0865413598,
+          "Recall": 0.8,
+          "Exceedance rate": 0.1666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 20.1307638889,
+          "Recall": 0.8979591837,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 27.8787698413,
+          "Recall": 0.9591836735,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 28.6392292896,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 17.2469841176,
+          "Recall": 0.9795918367,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 16.0115604173,
+          "Recall": 0.9795918367,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 27.5029861111,
+          "Recall": 0.9411764706,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 33.7435119048,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 29.9503483102,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 22.019221372,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 18.7226614421,
+          "Recall": 0.9803921569,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 12.0495138889,
+          "Recall": 0.8571428571,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 14.1325595238,
+          "Recall": 0.9591836735,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 22.4565659923,
+          "Recall": 0.1428571429,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 13.2458061617,
+          "Recall": 0.8979591837,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 15.1684809527,
+          "Recall": 0.8775510204,
+          "Exceedance rate": 0.8166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 9.3909722222,
+          "Recall": 0.75,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 11.0932142857,
+          "Recall": 0.625,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 12.5910154263,
+          "Recall": 0.0,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 8.933579222,
+          "Recall": 0.75,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 8.8871367025,
+          "Recall": 0.75,
+          "Exceedance rate": 0.1333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 19.4039583333,
+          "Recall": 0.9454545455,
+          "Exceedance rate": 0.9166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 29.5635218254,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 27.9395690636,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 15.5323649529,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 16.7715999221,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 24.3122222222,
+          "Recall": 0.9259259259,
+          "Exceedance rate": 0.9,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 30.5652876984,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 29.1688108532,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 18.2547810597,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 18.7927291423,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9,
+          "Scored days": 60
+        }
+      ],
+      "selected_method": "Persistence",
+      "final_test_metrics": {
+        "Persistence": {
+          "n": 180,
+          "mae": 16.61738425925926,
+          "rmse": 22.89450405393774,
+          "r2": 0.5772246655504714,
+          "exceedance_rate": 0.6555555555555556,
+          "recall": 0.8728813559322034,
+          "precision": 0.8728813559322034,
+          "false_positive_rate": 0.24193548387096775
+        },
+        "Seven-day mean": {
+          "n": 180,
+          "mae": 23.435863095238094,
+          "rmse": 31.089583236337564,
+          "r2": 0.22039078844151083,
+          "exceedance_rate": 0.6555555555555556,
+          "recall": 0.847457627118644,
+          "precision": 0.7575757575757576,
+          "false_positive_rate": 0.5161290322580645
+        },
+        "Climatology": {
+          "n": 180,
+          "mae": 30.400444533781982,
+          "rmse": 41.55069344323912,
+          "r2": -0.3925272859607558,
+          "exceedance_rate": 0.6555555555555556,
+          "recall": 0.3135593220338983,
+          "precision": 0.9487179487179487,
+          "false_positive_rate": 0.03225806451612903
+        },
+        "Ridge": {
+          "n": 180,
+          "mae": 18.320110194587414,
+          "rmse": 25.321979234785413,
+          "r2": 0.48281912327212917,
+          "exceedance_rate": 0.6555555555555556,
+          "recall": 0.8813559322033898,
+          "precision": 0.8813559322033898,
+          "false_positive_rate": 0.22580645161290322
+        },
+        "Random Forest": {
+          "n": 180,
+          "mae": 16.906044903966915,
+          "rmse": 23.512088272754013,
+          "r2": 0.5541081149403888,
+          "exceedance_rate": 0.6555555555555556,
+          "recall": 0.9322033898305084,
+          "precision": 0.88,
+          "false_positive_rate": 0.24193548387096775
+        }
+      },
+      "weather_test_note": "Open-Meteo stitched historical-forecast weather; near-term archived runs, not a fixed one-day-ahead issue-time forecast",
+      "forecast_dates": [
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16"
+      ],
+      "forecast": [
+        {
+          "date": "2026-10-10",
+          "effective_lead": 2,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 60.68249999999999,
+          "upper_80_ug_m3": 114.39374999999998,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-11",
+          "effective_lead": 3,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 45.80874999999999,
+          "upper_80_ug_m3": 114.39374999999998,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-12",
+          "effective_lead": 4,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 26.08208333333333,
+          "upper_80_ug_m3": 127.68333333333331,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-13",
+          "effective_lead": 5,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 26.08208333333333,
+          "upper_80_ug_m3": 134.38833333333332,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-14",
+          "effective_lead": 6,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 26.08208333333333,
+          "upper_80_ug_m3": 134.38833333333332,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-15",
+          "effective_lead": 7,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 26.08208333333333,
+          "upper_80_ug_m3": 134.38833333333332,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-16",
+          "effective_lead": 8,
+          "prediction_ug_m3": 85.38333333333333,
+          "lower_80_ug_m3": 26.08208333333333,
+          "upper_80_ug_m3": 135.10499999999996,
+          "exceeds_threshold": true
+        }
+      ],
+      "source_audit": null
+    },
+    "CAMS modeled:PM10": {
+      "source": "CAMS modeled",
+      "pollutant": "PM10",
+      "threshold_ug_m3": 100.0,
+      "date_start": "2021-10-09",
+      "date_end": "2026-10-08",
+      "calendar_days": 1826,
+      "valid_days": 1526,
+      "production_training_rows": 1525,
+      "final_train_rows": 1345,
+      "final_test_start": "2026-04-12",
+      "final_scored_days": 180,
+      "development_windows": 11,
+      "development_median_mae": {
+        "Climatology": 38.982993954297086,
+        "Persistence": 25.83402777777778,
+        "Random Forest": 25.746725886518963,
+        "Ridge": 23.896434608881545,
+        "Seven-day mean": 33.30862103174603
+      },
+      "development_results": [
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 20.6834027778,
+          "Recall": 0.8461538462,
+          "Exceedance rate": 0.4333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 33.3086210317,
+          "Recall": 0.8461538462,
+          "Exceedance rate": 0.4333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 39.537901137,
+          "Recall": 0.5,
+          "Exceedance rate": 0.4333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 27.0994941918,
+          "Recall": 0.9230769231,
+          "Exceedance rate": 0.4333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 25.7467258865,
+          "Recall": 0.9230769231,
+          "Exceedance rate": 0.4333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 23.9900694444,
+          "Recall": 0.8837209302,
+          "Exceedance rate": 0.7166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 29.4797321429,
+          "Recall": 0.9534883721,
+          "Exceedance rate": 0.7166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 36.1630602916,
+          "Recall": 1.0,
+          "Exceedance rate": 0.7166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 20.8841030561,
+          "Recall": 1.0,
+          "Exceedance rate": 0.7166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 28.6681852206,
+          "Recall": 1.0,
+          "Exceedance rate": 0.7166666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 30.3974305556,
+          "Recall": 0.9411764706,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 39.2135515873,
+          "Recall": 0.9215686275,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 38.0760707745,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 23.0508853972,
+          "Recall": 0.9803921569,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 24.0797724086,
+          "Recall": 0.9803921569,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 29.6097222222,
+          "Recall": 0.8510638298,
+          "Exceedance rate": 0.7833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 29.4464583333,
+          "Recall": 0.9361702128,
+          "Exceedance rate": 0.7833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 45.6349034877,
+          "Recall": 0.1914893617,
+          "Exceedance rate": 0.7833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 33.712771329,
+          "Recall": 0.6170212766,
+          "Exceedance rate": 0.7833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 30.2841905861,
+          "Recall": 0.6595744681,
+          "Exceedance rate": 0.7833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 17.0191666667,
+          "Recall": 0.625,
+          "Exceedance rate": 0.2666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 23.265515873,
+          "Recall": 0.25,
+          "Exceedance rate": 0.2666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 38.6273886762,
+          "Recall": 0.3125,
+          "Exceedance rate": 0.2666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 17.1881144264,
+          "Recall": 0.8125,
+          "Exceedance rate": 0.2666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 15.3539591071,
+          "Recall": 0.8125,
+          "Exceedance rate": 0.2666666667,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 23.6519444444,
+          "Recall": 0.880952381,
+          "Exceedance rate": 0.7,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 33.3349206349,
+          "Recall": 0.9047619048,
+          "Exceedance rate": 0.7,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 43.4579137688,
+          "Recall": 1.0,
+          "Exceedance rate": 0.7,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 23.5949821101,
+          "Recall": 0.9761904762,
+          "Exceedance rate": 0.7,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 19.7664208814,
+          "Recall": 0.9761904762,
+          "Exceedance rate": 0.7,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 27.4198611111,
+          "Recall": 0.8421052632,
+          "Exceedance rate": 0.6333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 32.528452381,
+          "Recall": 0.8157894737,
+          "Exceedance rate": 0.6333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 38.9829939543,
+          "Recall": 1.0,
+          "Exceedance rate": 0.6333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 26.4923272367,
+          "Recall": 1.0,
+          "Exceedance rate": 0.6333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 27.3635102869,
+          "Recall": 0.9473684211,
+          "Exceedance rate": 0.6333333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 105.7541666667,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 128.3188988095,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 238.3453366527,
+          "Recall": 0.7166666667,
+          "Exceedance rate": 1.0,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 105.8456298614,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 60
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 139.5933739446,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 31.6028472222,
+          "Recall": 0.7619047619,
+          "Exceedance rate": 0.35,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 57.4276884921,
+          "Recall": 0.619047619,
+          "Exceedance rate": 0.35,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 51.1188272925,
+          "Recall": 0.4761904762,
+          "Exceedance rate": 0.35,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 31.6131236654,
+          "Recall": 0.7619047619,
+          "Exceedance rate": 0.35,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 28.957457036,
+          "Recall": 0.7619047619,
+          "Exceedance rate": 0.35,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 25.8340277778,
+          "Recall": 0.8780487805,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 34.548531746,
+          "Recall": 0.9268292683,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 33.9777932078,
+          "Recall": 1.0,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 23.8964346089,
+          "Recall": 0.9756097561,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 25.0537629761,
+          "Recall": 0.9756097561,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 24.6047916667,
+          "Recall": 0.8536585366,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 30.3929861111,
+          "Recall": 0.9024390244,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 33.2625529228,
+          "Recall": 1.0,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 21.546934919,
+          "Recall": 0.9512195122,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 18.1617830777,
+          "Recall": 0.9512195122,
+          "Exceedance rate": 0.6833333333,
+          "Scored days": 60
+        }
+      ],
+      "selected_method": "Persistence",
+      "final_test_metrics": {
+        "Persistence": {
+          "n": 180,
+          "mae": 86.9882175925926,
+          "rmse": 132.80073030528882,
+          "r2": 0.6496018553270712,
+          "exceedance_rate": 0.6722222222222223,
+          "recall": 0.9090909090909091,
+          "precision": 0.9090909090909091,
+          "false_positive_rate": 0.1864406779661017
+        },
+        "Seven-day mean": {
+          "n": 180,
+          "mae": 131.9456316137566,
+          "rmse": 178.00458751099495,
+          "r2": 0.37046009911188416,
+          "exceedance_rate": 0.6722222222222223,
+          "recall": 0.9008264462809917,
+          "precision": 0.7956204379562044,
+          "false_positive_rate": 0.4745762711864407
+        },
+        "Climatology": {
+          "n": 180,
+          "mae": 173.27645378199648,
+          "rmse": 244.3873141422806,
+          "r2": -0.18663782627432757,
+          "exceedance_rate": 0.6722222222222223,
+          "recall": 0.7768595041322314,
+          "precision": 0.7704918032786885,
+          "false_positive_rate": 0.4745762711864407
+        },
+        "Ridge": {
+          "n": 180,
+          "mae": 87.17572898267979,
+          "rmse": 128.560571006365,
+          "r2": 0.6716201828738776,
+          "exceedance_rate": 0.6722222222222223,
+          "recall": 0.9586776859504132,
+          "precision": 0.8787878787878788,
+          "false_positive_rate": 0.2711864406779661
+        },
+        "Random Forest": {
+          "n": 180,
+          "mae": 95.62056617036556,
+          "rmse": 146.82837838401835,
+          "r2": 0.5716676499661013,
+          "exceedance_rate": 0.6722222222222223,
+          "recall": 0.9421487603305785,
+          "precision": 0.9193548387096774,
+          "false_positive_rate": 0.1694915254237288
+        }
+      },
+      "weather_test_note": "Open-Meteo stitched historical-forecast weather; near-term archived runs, not a fixed one-day-ahead issue-time forecast",
+      "forecast_dates": [
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16"
+      ],
+      "forecast": [
+        {
+          "date": "2026-10-10",
+          "effective_lead": 2,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 52.17666666666668,
+          "upper_80_ug_m3": 382.0391666666667,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-11",
+          "effective_lead": 3,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 385.0845833333333,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-12",
+          "effective_lead": 4,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 385.0845833333333,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-13",
+          "effective_lead": 5,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 385.0845833333333,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-14",
+          "effective_lead": 6,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 395.63166666666666,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-15",
+          "effective_lead": 7,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 520.7916666666666,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-16",
+          "effective_lead": 8,
+          "prediction_ug_m3": 199.42083333333335,
+          "lower_80_ug_m3": 0.0,
+          "upper_80_ug_m3": 520.7916666666666,
+          "exceeds_threshold": true
+        }
+      ],
+      "source_audit": null
+    },
+    "R.K. Puram station:PM2.5": {
+      "source": "R.K. Puram station",
+      "pollutant": "PM2.5",
+      "threshold_ug_m3": 60.0,
+      "date_start": "2021-10-06",
+      "date_end": "2026-10-05",
+      "calendar_days": 1826,
+      "valid_days": 1610,
+      "production_training_rows": 1540,
+      "final_train_rows": 1409,
+      "final_test_start": "2026-04-09",
+      "final_scored_days": 131,
+      "development_windows": 10,
+      "development_median_mae": {
+        "Climatology": 40.44873426279014,
+        "Persistence": 31.56857457053181,
+        "Random Forest": 30.19064582804039,
+        "Ridge": 31.526231847476637,
+        "Seven-day mean": 38.800592567217464
+      },
+      "development_results": [
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 48.515500583,
+          "Recall": 0.9821428571,
+          "Exceedance rate": 0.9655172414,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 56.7251742432,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9655172414,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 52.3719423357,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9655172414,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 38.2337145948,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9655172414,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 38.5683290484,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9655172414,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 21.5635884662,
+          "Recall": 0.9019607843,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 21.6304856798,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 28.5255261899,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 24.8187491001,
+          "Recall": 0.9607843137,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 21.8129626077,
+          "Recall": 1.0,
+          "Exceedance rate": 0.85,
+          "Scored days": 60
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 9.5104676544,
+          "Recall": 0.8571428571,
+          "Exceedance rate": 0.5185185185,
+          "Scored days": 54
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 13.3512083564,
+          "Recall": 0.7857142857,
+          "Exceedance rate": 0.5185185185,
+          "Scored days": 54
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 21.7794167323,
+          "Recall": 0.0357142857,
+          "Exceedance rate": 0.5185185185,
+          "Scored days": 54
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 10.6928450797,
+          "Recall": 0.8928571429,
+          "Exceedance rate": 0.5185185185,
+          "Scored days": 54
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 9.0312926312,
+          "Recall": 0.8214285714,
+          "Exceedance rate": 0.5185185185,
+          "Scored days": 54
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 41.5735606749,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 52
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 57.2128198392,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 52
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 74.4103392822,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 52
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 41.861264254,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 52
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 56.335487135,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 52
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 49.8366597951,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 61.9962003982,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 62.2959344207,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 44.5611991425,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 39.4614543857,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 20.8752876687,
+          "Recall": 0.9019607843,
+          "Exceedance rate": 0.8793103448,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 22.2119323739,
+          "Recall": 0.9607843137,
+          "Exceedance rate": 0.8793103448,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 25.7290461477,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8793103448,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 17.0154007014,
+          "Recall": 0.9019607843,
+          "Exceedance rate": 0.8793103448,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 18.9765404471,
+          "Recall": 0.9607843137,
+          "Exceedance rate": 0.8793103448,
+          "Scored days": 58
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 10.917506382,
+          "Recall": 0.6875,
+          "Exceedance rate": 0.2857142857,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 12.9492634356,
+          "Recall": 0.375,
+          "Exceedance rate": 0.2857142857,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 13.6954352905,
+          "Recall": 0.625,
+          "Exceedance rate": 0.2857142857,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 12.9106974785,
+          "Recall": 0.75,
+          "Exceedance rate": 0.2857142857,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 9.941254355,
+          "Recall": 0.8125,
+          "Exceedance rate": 0.2857142857,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 42.382663915,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 55.3892527605,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 65.4310965655,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 44.2409976029,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 52.08653342,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 11.4344008757,
+          "Recall": 0.2857142857,
+          "Exceedance rate": 0.1296296296,
+          "Scored days": 54
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 11.1515435516,
+          "Recall": 0.2857142857,
+          "Exceedance rate": 0.1296296296,
+          "Scored days": 54
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 13.245539414,
+          "Recall": 0.4285714286,
+          "Exceedance rate": 0.1296296296,
+          "Scored days": 54
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 12.3276812522,
+          "Recall": 0.8571428571,
+          "Exceedance rate": 0.1296296296,
+          "Scored days": 54
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 10.4654579136,
+          "Recall": 0.2857142857,
+          "Exceedance rate": 0.1296296296,
+          "Scored days": 54
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 61.2265301641,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 63.1598976568,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 55.0626019104,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 55.4369315791,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 48.2999531178,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        }
+      ],
+      "selected_method": "Persistence",
+      "final_test_metrics": {
+        "Persistence": {
+          "n": 131,
+          "mae": 12.121818034139094,
+          "rmse": 16.101807996754925,
+          "r2": 0.4430060108239454,
+          "exceedance_rate": 0.32061068702290074,
+          "recall": 0.6666666666666666,
+          "precision": 0.7,
+          "false_positive_rate": 0.1348314606741573
+        },
+        "Seven-day mean": {
+          "n": 131,
+          "mae": 15.205352897100264,
+          "rmse": 19.658176508484562,
+          "r2": 0.16979053257693588,
+          "exceedance_rate": 0.32061068702290074,
+          "recall": 0.5714285714285714,
+          "precision": 0.6153846153846154,
+          "false_positive_rate": 0.16853932584269662
+        },
+        "Climatology": {
+          "n": 131,
+          "mae": 18.480909925499034,
+          "rmse": 22.35297078356035,
+          "r2": -0.07342504039754094,
+          "exceedance_rate": 0.32061068702290074,
+          "recall": 0.6904761904761905,
+          "precision": 0.5,
+          "false_positive_rate": 0.3258426966292135
+        },
+        "Ridge": {
+          "n": 131,
+          "mae": 13.187031948216006,
+          "rmse": 17.125317673638463,
+          "r2": 0.369944954280941,
+          "exceedance_rate": 0.32061068702290074,
+          "recall": 0.6666666666666666,
+          "precision": 0.5833333333333334,
+          "false_positive_rate": 0.2247191011235955
+        },
+        "Random Forest": {
+          "n": 131,
+          "mae": 11.519939298060716,
+          "rmse": 15.027489211177635,
+          "r2": 0.5148521949514853,
+          "exceedance_rate": 0.32061068702290074,
+          "recall": 0.7619047619047619,
+          "precision": 0.6530612244897959,
+          "false_positive_rate": 0.19101123595505617
+        }
+      },
+      "weather_test_note": "Open-Meteo stitched historical-forecast weather; near-term archived runs, not a fixed one-day-ahead issue-time forecast",
+      "forecast_dates": [
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16"
+      ],
+      "forecast": [
+        {
+          "date": "2026-10-10",
+          "effective_lead": 5,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 36.75309523809524,
+          "upper_80_ug_m3": 91.46426501035197,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-11",
+          "effective_lead": 6,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 28.120941558441565,
+          "upper_80_ug_m3": 96.71198240165631,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-12",
+          "effective_lead": 7,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 28.120941558441565,
+          "upper_80_ug_m3": 108.52575051759834,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-13",
+          "effective_lead": 8,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 16.61904761904762,
+          "upper_80_ug_m3": 108.52575051759834,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-14",
+          "effective_lead": 9,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 16.61904761904762,
+          "upper_80_ug_m3": 108.52575051759834,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-15",
+          "effective_lead": 10,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 16.61904761904762,
+          "upper_80_ug_m3": 108.52575051759834,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-16",
+          "effective_lead": 11,
+          "prediction_ug_m3": 60.285714285714285,
+          "lower_80_ug_m3": 16.61904761904762,
+          "upper_80_ug_m3": 108.52575051759834,
+          "exceeds_threshold": true
+        }
+      ],
+      "source_audit": {
+        "station": "R K Puram, Delhi - DPCC",
+        "matched_hours": 6167,
+        "overlap_start": "2025-02-19",
+        "overlap_end": "2025-09-01",
+        "expected_units": "micrograms per cubic metre (ug/m3)",
+        "unit_note": "XKDR and OpenAQ both identify particulate concentration in ug/m3. The OpenAQ archive's raw unit text contains replacement characters, so strict byte-for-byte unit comparison is unavailable.",
+        "pollutants": {
+          "pm25": {
+            "matched_hours": 3099,
+            "xkdr_only_hours": 326,
+            "openaq_only_hours": 1098,
+            "within_1_ug_m3": 0.9887060342045821,
+            "median_signed_difference": 0.0,
+            "passed": true
+          },
+          "pm10": {
+            "matched_hours": 3068,
+            "xkdr_only_hours": 327,
+            "openaq_only_hours": 1088,
+            "within_1_ug_m3": 0.9771838331160365,
+            "median_signed_difference": 0.0,
+            "passed": true
+          }
+        },
+        "passed": true
+      }
+    },
+    "R.K. Puram station:PM10": {
+      "source": "R.K. Puram station",
+      "pollutant": "PM10",
+      "threshold_ug_m3": 100.0,
+      "date_start": "2021-10-06",
+      "date_end": "2026-10-05",
+      "calendar_days": 1826,
+      "valid_days": 1594,
+      "production_training_rows": 1518,
+      "final_train_rows": 1385,
+      "final_test_start": "2026-04-09",
+      "final_scored_days": 133,
+      "development_windows": 10,
+      "development_median_mae": {
+        "Climatology": 62.820154702948344,
+        "Persistence": 45.416864296946166,
+        "Random Forest": 40.392864105687124,
+        "Ridge": 42.85221234144444,
+        "Seven-day mean": 56.55851910163386
+      },
+      "development_results": [
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 60.498233071,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 66.4129323014,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 66.1527554174,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 48.5505556422,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 44.6618451776,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 58
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 39.6704381727,
+          "Recall": 0.9183673469,
+          "Exceedance rate": 0.8596491228,
+          "Scored days": 57
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 46.7041059018,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8596491228,
+          "Scored days": 57
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 99.8944176329,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8596491228,
+          "Scored days": 57
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 37.1538690407,
+          "Recall": 0.9591836735,
+          "Exceedance rate": 0.8596491228,
+          "Scored days": 57
+        },
+        {
+          "Year": "2022-23",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 36.1238830337,
+          "Recall": 1.0,
+          "Exceedance rate": 0.8596491228,
+          "Scored days": 57
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 17.9249637681,
+          "Recall": 0.9189189189,
+          "Exceedance rate": 0.74,
+          "Scored days": 50
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 30.3358711001,
+          "Recall": 0.8648648649,
+          "Exceedance rate": 0.74,
+          "Scored days": 50
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 53.0373646345,
+          "Recall": 0.3783783784,
+          "Exceedance rate": 0.74,
+          "Scored days": 50
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 18.421576962,
+          "Recall": 1.0,
+          "Exceedance rate": 0.74,
+          "Scored days": 50
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 19.0222056308,
+          "Recall": 0.972972973,
+          "Exceedance rate": 0.74,
+          "Scored days": 50
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 51.1632904212,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 51
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 70.01408807,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 51
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 98.1652247788,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 51
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 51.7378433375,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 51
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 63.0557524252,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 51
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Persistence",
+          "MAE": 66.0946323713,
+          "Recall": 0.9824561404,
+          "Exceedance rate": 0.9827586207,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Seven-day mean",
+          "MAE": 77.2148612301,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9827586207,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Climatology",
+          "MAE": 88.3549286486,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9827586207,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Ridge",
+          "MAE": 53.0484508751,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9827586207,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Winter",
+          "Method": "Random Forest",
+          "MAE": 52.1978180662,
+          "Recall": 1.0,
+          "Exceedance rate": 0.9827586207,
+          "Scored days": 58
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Persistence",
+          "MAE": 36.966034932,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Seven-day mean",
+          "MAE": 39.9907336662,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Climatology",
+          "MAE": 44.6255953863,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Ridge",
+          "MAE": 31.4061090665,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2023-24",
+          "Season": "Spring",
+          "Method": "Random Forest",
+          "MAE": 34.7658604405,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 19.8282624572,
+          "Recall": 0.75,
+          "Exceedance rate": 0.3571428571,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 27.1446482614,
+          "Recall": 0.75,
+          "Exceedance rate": 0.3571428571,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 34.1588780474,
+          "Recall": 1.0,
+          "Exceedance rate": 0.3571428571,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 20.5635025219,
+          "Recall": 0.9,
+          "Exceedance rate": 0.3571428571,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 15.8374464471,
+          "Recall": 0.95,
+          "Exceedance rate": 0.3571428571,
+          "Scored days": 56
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 65.8846648307,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 74.4579463172,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 78.3842325051,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 63.977227018,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2024-25",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 64.5951535498,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 53
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Persistence",
+          "MAE": 19.7779169183,
+          "Recall": 0.75,
+          "Exceedance rate": 0.4166666667,
+          "Scored days": 48
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Seven-day mean",
+          "MAE": 21.8216379446,
+          "Recall": 0.65,
+          "Exceedance rate": 0.4166666667,
+          "Scored days": 48
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Climatology",
+          "MAE": 30.4102228905,
+          "Recall": 0.85,
+          "Exceedance rate": 0.4166666667,
+          "Scored days": 48
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Ridge",
+          "MAE": 22.8465241766,
+          "Recall": 0.95,
+          "Exceedance rate": 0.4166666667,
+          "Scored days": 48
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Monsoon transition",
+          "Method": "Random Forest",
+          "MAE": 17.5332962308,
+          "Recall": 0.95,
+          "Exceedance rate": 0.4166666667,
+          "Scored days": 48
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Persistence",
+          "MAE": 75.836769592,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 50
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Seven-day mean",
+          "MAE": 78.4431545597,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 50
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Climatology",
+          "MAE": 59.4875539885,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 50
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Ridge",
+          "MAE": 61.7366745447,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 50
+        },
+        {
+          "Year": "2025-26",
+          "Season": "Post-monsoon",
+          "Method": "Random Forest",
+          "MAE": 56.8257983566,
+          "Recall": 1.0,
+          "Exceedance rate": 1.0,
+          "Scored days": 50
+        }
+      ],
+      "selected_method": "Random Forest",
+      "final_test_metrics": {
+        "Persistence": {
+          "n": 133,
+          "mae": 37.411158793953085,
+          "rmse": 51.48690075505537,
+          "r2": 0.5638943335815296,
+          "exceedance_rate": 0.6842105263157895,
+          "recall": 0.8681318681318682,
+          "precision": 0.8681318681318682,
+          "false_positive_rate": 0.2857142857142857
+        },
+        "Seven-day mean": {
+          "n": 133,
+          "mae": 55.0618021028428,
+          "rmse": 72.45124376896696,
+          "r2": 0.13644516578017551,
+          "exceedance_rate": 0.6842105263157895,
+          "recall": 0.8681318681318682,
+          "precision": 0.7523809523809524,
+          "false_positive_rate": 0.6190476190476191
+        },
+        "Climatology": {
+          "n": 133,
+          "mae": 54.89155561962569,
+          "rmse": 73.75404443083784,
+          "r2": 0.10510947444394736,
+          "exceedance_rate": 0.6842105263157895,
+          "recall": 0.8021978021978022,
+          "precision": 0.8021978021978022,
+          "false_positive_rate": 0.42857142857142855
+        },
+        "Ridge": {
+          "n": 133,
+          "mae": 33.94214372020069,
+          "rmse": 47.423561317688886,
+          "r2": 0.6300129204502031,
+          "exceedance_rate": 0.6842105263157895,
+          "recall": 0.978021978021978,
+          "precision": 0.8317757009345794,
+          "false_positive_rate": 0.42857142857142855
+        },
+        "Random Forest": {
+          "n": 133,
+          "mae": 27.61177006003058,
+          "rmse": 40.357583675553755,
+          "r2": 0.7320532210246363,
+          "exceedance_rate": 0.6842105263157895,
+          "recall": 0.9230769230769231,
+          "precision": 0.8842105263157894,
+          "false_positive_rate": 0.2619047619047619
+        }
+      },
+      "weather_test_note": "Open-Meteo stitched historical-forecast weather; near-term archived runs, not a fixed one-day-ahead issue-time forecast",
+      "forecast_dates": [
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16"
+      ],
+      "forecast": [
+        {
+          "date": "2026-10-10",
+          "effective_lead": 5,
+          "prediction_ug_m3": 167.95121501048845,
+          "lower_80_ug_m3": 101.14529454107826,
+          "upper_80_ug_m3": 274.3371767759048,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-11",
+          "effective_lead": 6,
+          "prediction_ug_m3": 142.94690600402836,
+          "lower_80_ug_m3": 68.76879924245848,
+          "upper_80_ug_m3": 249.33286776944473,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-12",
+          "effective_lead": 7,
+          "prediction_ug_m3": 132.69368991576556,
+          "lower_80_ug_m3": 58.51558315419568,
+          "upper_80_ug_m3": 239.07965168118193,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-13",
+          "effective_lead": 8,
+          "prediction_ug_m3": 172.69494235626223,
+          "lower_80_ug_m3": 98.51683559469235,
+          "upper_80_ug_m3": 279.0809041216786,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-14",
+          "effective_lead": 9,
+          "prediction_ug_m3": 189.6548763948994,
+          "lower_80_ug_m3": 98.57492542541573,
+          "upper_80_ug_m3": 296.04083816031573,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-15",
+          "effective_lead": 10,
+          "prediction_ug_m3": 185.53913489521037,
+          "lower_80_ug_m3": 94.4591839257267,
+          "upper_80_ug_m3": 291.92509666062676,
+          "exceeds_threshold": true
+        },
+        {
+          "date": "2026-10-16",
+          "effective_lead": 11,
+          "prediction_ug_m3": 158.8335050396922,
+          "lower_80_ug_m3": 67.75355407020854,
+          "upper_80_ug_m3": 265.2194668051086,
+          "exceeds_threshold": true
+        }
+      ],
+      "source_audit": {
+        "station": "R K Puram, Delhi - DPCC",
+        "matched_hours": 6167,
+        "overlap_start": "2025-02-19",
+        "overlap_end": "2025-09-01",
+        "expected_units": "micrograms per cubic metre (ug/m3)",
+        "unit_note": "XKDR and OpenAQ both identify particulate concentration in ug/m3. The OpenAQ archive's raw unit text contains replacement characters, so strict byte-for-byte unit comparison is unavailable.",
+        "pollutants": {
+          "pm25": {
+            "matched_hours": 3099,
+            "xkdr_only_hours": 326,
+            "openaq_only_hours": 1098,
+            "within_1_ug_m3": 0.9887060342045821,
+            "median_signed_difference": 0.0,
+            "passed": true
+          },
+          "pm10": {
+            "matched_hours": 3068,
+            "xkdr_only_hours": 327,
+            "openaq_only_hours": 1088,
+            "within_1_ug_m3": 0.9771838331160365,
+            "median_signed_difference": 0.0,
+            "passed": true
+          }
+        },
+        "passed": true
+      }
+    }
+  },
+  "generated_at_utc": "2026-10-08T18:34:22.484862+00:00"
+}

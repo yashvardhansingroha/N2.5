@@ -1,8 +1,12 @@
 .streamlit/secrets.toml
+.env
+.env.*
+.venv/
 __pycache__/
 .pytest_cache/
 .pytest_tmp*/
 .pytest_status_check/
+.pytest_*/
 *.py[cod]
 air_quality_cache.sqlite
 air_quality_cache.sqlite-shm
@@ -10,8 +14,10 @@ air_quality_cache.sqlite-wal
 observed_data_cache.sqlite
 observed_data_cache.sqlite-shm
 observed_data_cache.sqlite-wal
+historical_forecast_cache.sqlite*
 cpcb_data.csv
 data/raw/
 model_cache/
+*.log
 streamlit.out.log
 streamlit.err.log

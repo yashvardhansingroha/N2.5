@@ -34,6 +34,13 @@ from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from urllib3.util.retry import Retry
+from pollutant_pipeline import CAMS_POLLUTANTS, STATION_POLLUTANTS, five_year_start
+from pollutant_dashboard import render as render_pollutant_dashboard
+from station_archive import (
+    STATION_LATITUDE, STATION_LONGITUDE,
+    cached_station_dataset, fetch_station_weather, prepare_station,
+)
+from archived_forecast_weather import fetch_archived_daily
 
 try:
     from atmospheric_hero import feature_enabled as video_hero_feature_enabled
@@ -83,6 +90,7 @@ WEATHER_DAILY_NAMES = {
 HISTORY_COLUMNS = [
     "Date",
     "CAMS_PM2.5",
+    "CAMS_PM10",
     "CPCB_PM2.5",
     "Manual_PM2.5",
     "Temperature",
@@ -138,7 +146,7 @@ BUFFER_DAYS = 120
 FORECAST_DAYS = 7
 CPCB_SAFE_LIMIT = 60.0
 MIN_SEASON_TRAINING_ROWS = 365
-CACHE_SCHEMA_VERSION = 2
+CACHE_SCHEMA_VERSION = 3
 MODEL_CACHE_VERSION = 3
 MAX_TRAINING_YEARS = 5
 MIN_PRODUCTION_TRAINING_ROWS = 365
@@ -337,6 +345,7 @@ def initialize_database(path: Path = CACHE_DB_FILE) -> None:
                 local_timestamp TEXT NOT NULL,
                 local_date TEXT NOT NULL,
                 cams_pm25 REAL,
+                cams_pm10 REAL,
                 temperature REAL,
                 humidity REAL,
                 wind_speed REAL,
@@ -410,6 +419,7 @@ def initialize_database(path: Path = CACHE_DB_FILE) -> None:
             row[1] for row in connection.execute("PRAGMA table_info(hourly_history)")
         }
         for column in (
+            "cams_pm10",
             "precipitation", "pressure_msl", "cloud_cover", "wind_direction",
             "wind_gusts", "boundary_layer_height",
         ):
@@ -446,6 +456,13 @@ def payload_to_hourly(
     return frame, str(timezone_name)
 
 
+def local_today_for_timezone(
+    timezone_name: str, now_utc: datetime | None = None,
+) -> date:
+    instant = now_utc or datetime.now(timezone.utc)
+    return instant.astimezone(ZoneInfo(timezone_name)).date()
+
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_hourly_archive_range(
     latitude: float,
@@ -465,7 +482,7 @@ def fetch_hourly_archive_range(
     }
     air_payload = get_json(
         AIR_QUALITY_URL,
-        {**common, "hourly": "pm2_5", "domains": "cams_global"},
+        {**common, "hourly": "pm2_5,pm10", "domains": "cams_global"},
         "Open-Meteo Air Quality",
     )
     weather_payload = get_json(
@@ -477,7 +494,7 @@ def fetch_hourly_archive_range(
         "Open-Meteo Historical Weather",
     )
     air, air_timezone = payload_to_hourly(
-        air_payload, {"pm2_5": "cams_pm25"}
+        air_payload, {"pm2_5": "cams_pm25", "pm10": "cams_pm10"}
     )
     weather, weather_timezone = payload_to_hourly(weather_payload, WEATHER_API_FIELDS)
     if air_timezone != weather_timezone:
@@ -504,6 +521,7 @@ def complete_cached_dates(
         GROUP BY local_date
         HAVING COUNT(DISTINCT local_timestamp) = 24
            AND COUNT(cams_pm25) = 24
+           AND COUNT(cams_pm10) = 24
            AND COUNT(temperature) = 24
            AND COUNT(humidity) = 24
            AND COUNT(wind_speed) = 24
@@ -542,7 +560,7 @@ def store_hourly_rows(
     if frame.empty:
         return 0
     fetched_at = datetime.now(timezone.utc).isoformat()
-    columns = ["cams_pm25", *WEATHER_DAILY_NAMES]
+    columns = ["cams_pm25", "cams_pm10", *WEATHER_DAILY_NAMES]
     records = []
     for row in frame.to_dict("records"):
         records.append(
@@ -563,14 +581,15 @@ def store_hourly_rows(
         connection.executemany(
             """
             INSERT INTO hourly_history(
-                location_key, local_timestamp, local_date, cams_pm25,
+                location_key, local_timestamp, local_date, cams_pm25, cams_pm10,
                 temperature, humidity, wind_speed, precipitation, pressure_msl,
                 cloud_cover, wind_direction, wind_gusts, boundary_layer_height,
                 timezone, source, fetched_at_utc
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(location_key, local_timestamp) DO UPDATE SET
                 local_date = excluded.local_date,
                 cams_pm25 = COALESCE(excluded.cams_pm25, hourly_history.cams_pm25),
+                cams_pm10 = COALESCE(excluded.cams_pm10, hourly_history.cams_pm10),
                 temperature = COALESCE(excluded.temperature, hourly_history.temperature),
                 humidity = COALESCE(excluded.humidity, hourly_history.humidity),
                 wind_speed = COALESCE(excluded.wind_speed, hourly_history.wind_speed),
@@ -611,16 +630,16 @@ def ensure_hourly_cache(
     rows_written = 0
     timezone_name: str | None = None
     for missing_start, missing_end in missing_ranges:
-        frame, timezone_name = fetch_hourly_archive_range(
-            latitude,
-            longitude,
-            missing_start,
-            missing_end,
-            refresh_token,
-        )
-        rows_written += store_hourly_rows(
-            cache_location, frame, timezone_name, path
-        )
+        chunk_start = missing_start
+        while chunk_start <= missing_end:
+            chunk_end = min(missing_end, chunk_start + timedelta(days=89))
+            frame, timezone_name = fetch_hourly_archive_range(
+                latitude, longitude, chunk_start, chunk_end, refresh_token
+            )
+            rows_written += store_hourly_rows(
+                cache_location, frame, timezone_name, path
+            )
+            chunk_start = chunk_end + timedelta(days=1)
     after = complete_cached_dates(cache_location, start_date, end_date, path)
     return {
         "location_key": cache_location,
@@ -644,6 +663,7 @@ def daily_history_from_cache(
     query = """
         SELECT local_date AS Date,
                AVG(cams_pm25) AS "CAMS_PM2.5",
+               AVG(cams_pm10) AS "CAMS_PM10",
                AVG(temperature) AS Temperature,
                AVG(humidity) AS Humidity,
                AVG(wind_speed) AS Wind_Speed,
@@ -656,6 +676,7 @@ def daily_history_from_cache(
                MIN(timezone) AS Timezone,
                COUNT(DISTINCT local_timestamp) AS hours,
                COUNT(cams_pm25) AS pm_count,
+               COUNT(cams_pm10) AS pm10_count,
                COUNT(temperature) AS temperature_count,
                COUNT(humidity) AS humidity_count,
                COUNT(wind_speed) AS wind_count
@@ -677,15 +698,16 @@ def daily_history_from_cache(
             params=(cache_location, start_date.isoformat(), end_date.isoformat()),
         )
     if frame.empty:
-        return pd.DataFrame(columns=["Date", "CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"])
+        return pd.DataFrame(columns=["Date", "CAMS_PM2.5", "CAMS_PM10", *WEATHER_FEATURES, "Timezone"])
     valid = (
         (frame["hours"] == 24)
         & (frame["pm_count"] == 24)
+        & (frame["pm10_count"] == 24)
         & (frame["temperature_count"] == 24)
         & (frame["humidity_count"] == 24)
         & (frame["wind_count"] == 24)
     )
-    frame = frame.loc[valid, ["Date", "CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"]].copy()
+    frame = frame.loc[valid, ["Date", "CAMS_PM2.5", "CAMS_PM10", *WEATHER_FEATURES, "Timezone"]].copy()
     frame["Date"] = pd.to_datetime(frame["Date"]).dt.date
     return frame.reset_index(drop=True)
 
@@ -955,7 +977,7 @@ def fetch_forecast_weather(
         },
     )
     return {
-        "today": current_time.date(),
+        "today": local_today_for_timezone(timezone_name),
         "timezone": timezone_name,
         "daily": daily,
     }
@@ -981,7 +1003,7 @@ def fetch_historical_bundle(
     }
     air_payload = get_json(
         AIR_QUALITY_URL,
-        {**common_params, "hourly": "pm2_5", "domains": "cams_global"},
+        {**common_params, "hourly": "pm2_5,pm10", "domains": "cams_global"},
         "Open-Meteo Air Quality",
     )
     weather_payload = get_json(
@@ -993,7 +1015,7 @@ def fetch_historical_bundle(
         "Open-Meteo Historical Weather",
     )
     air_daily, air_timezone = parse_hourly_daily(
-        air_payload, {"pm2_5": "CAMS_PM2.5"}
+        air_payload, {"pm2_5": "CAMS_PM2.5", "pm10": "CAMS_PM10"}
     )
     weather_daily, weather_timezone = parse_hourly_daily(
         weather_payload,
@@ -1141,6 +1163,7 @@ def load_history(path: Path = DATA_FILE) -> pd.DataFrame:
     frame = frame.dropna(subset=["Date"])
     numeric_columns = [
         "CAMS_PM2.5",
+        "CAMS_PM10",
         "CPCB_PM2.5",
         "Manual_PM2.5",
         *WEATHER_FEATURES,
@@ -1177,7 +1200,7 @@ def merge_historical_rows(
             )
             index = history.index[-1]
             history.at[index, "Date"] = local_date
-        for column in ["CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"]:
+        for column in ["CAMS_PM2.5", "CAMS_PM10", *WEATHER_FEATURES, "Timezone"]:
             history.at[index, column] = row[column]
     return history.sort_values("Date").drop_duplicates("Date", keep="last").reset_index(drop=True)
 
@@ -2502,9 +2525,9 @@ def render_visual_system() -> None:
     )
 
 
-def render_masthead() -> None:
+def render_masthead(pollutant_key: str = "PM2.5") -> None:
     st.markdown(
-        """
+        f"""
         <div class="aq-masthead">
             <div class="aq-airflow" aria-hidden="true">
                 <span class="aq-stream s1"></span>
@@ -2513,14 +2536,61 @@ def render_masthead() -> None:
                 <span class="aq-stream s4"></span>
             </div>
             <div class="aq-masthead-content">
-                <div class="aq-kicker"><span class="aq-kicker-mark"></span>PM2.5 / Urban Atmosphere</div>
+                <div class="aq-kicker"><span class="aq-kicker-mark"></span>{pollutant_key} / Urban Atmosphere</div>
                 <h1>Urban Air Quality<br><span>Early Warning System</span></h1>
-                <p>Maximum-available CAMS training under a five-year cap, rolling yearly seasonal backtests, prospective evaluation, and a seven-day PM2.5 forecast.</p>
+                <p>Five-year historical analysis, seasonal validation, and a seven-day {pollutant_key} outlook.</p>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+
+def archived_test_weather(
+    daily: pd.DataFrame, target: str, latitude: float, longitude: float,
+) -> pd.DataFrame | None:
+    target_values = pd.to_numeric(daily[target], errors="coerce")
+    valid_dates = daily.loc[target_values.notna(), "Date"]
+    if valid_dates.empty:
+        return None
+    cutoff = max(valid_dates)
+    try:
+        return fetch_archived_daily(
+            latitude, longitude, cutoff - timedelta(days=179), cutoff
+        )
+    except (requests.RequestException, OSError, ValueError) as exc:
+        st.info(f"Archived forecast weather unavailable; using observed-weather upper bound: {exc}")
+        return None
+
+
+def render_coverage_table(
+    cams_daily: pd.DataFrame, station_daily: pd.DataFrame,
+) -> None:
+    rows = []
+    for source, frame, pollutants in (
+        ("CAMS modeled", cams_daily, CAMS_POLLUTANTS),
+        ("R.K. Puram station", station_daily, STATION_POLLUTANTS),
+    ):
+        if frame.empty:
+            continue
+        for key, pollutant in pollutants.items():
+            if pollutant.target not in frame:
+                continue
+            valid = frame.loc[pd.to_numeric(frame[pollutant.target], errors="coerce").notna()]
+            if valid.empty:
+                continue
+            cutoff = max(valid["Date"])
+            start = five_year_start(cutoff)
+            rows.append({
+                "Source": source, "Pollutant": key,
+                "Five-year span": f"{start} to {cutoff}",
+                "Valid days": int(valid["Date"].between(start, cutoff).sum()),
+                "Calendar days": (cutoff - start).days + 1,
+            })
+    if rows:
+        st.subheader("Source coverage")
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.caption("A five-year span does not imply five complete years of daily observations.")
 
 
 def main() -> None:
@@ -2538,6 +2608,8 @@ def main() -> None:
         st.session_state.cpcb_attempt_date = None
     if "cpcb_status" not in st.session_state:
         st.session_state.cpcb_status = None
+    if "station_attempt_date" not in st.session_state:
+        st.session_state.station_attempt_date = None
 
     video_hero_active = bool(
         render_atmospheric_hero
@@ -2550,12 +2622,19 @@ def main() -> None:
         city = st.text_input("City", value="Delhi").strip()
         latitude = st.number_input("Latitude", value=28.6139, format="%.4f")
         longitude = st.number_input("Longitude", value=77.2090, format="%.4f")
+        pollutant_key = st.radio("Pollutant", ("PM2.5", "PM10"), horizontal=True)
+        source_choice = st.radio(
+            "Analysis source", ("CAMS modeled", "R.K. Puram station"),
+            horizontal=True,
+        )
+        if source_choice == "R.K. Puram station":
+            st.caption("Station location is fixed at R.K. Puram, Delhi. The city coordinates above apply only to the CAMS fallback.")
         secret_key = read_secret_api_key()
         api_key = secret_key or st.text_input("data.gov.in API key", type="password")
         firms_secret = read_firms_map_key()
         firms_key = firms_secret or st.text_input(
             "NASA FIRMS MAP_KEY (optional)", type="password",
-            help="Enables satellite-detected thermal activity factors. The key is never stored by the app.",
+            help="Caches satellite thermal detections for later research. They do not enter the current five-year PM model.",
         )
         if video_hero_active:
             st.divider()
@@ -2581,15 +2660,20 @@ def main() -> None:
     hero_rendered = bool(
         video_hero_active
         and render_atmospheric_hero
-        and render_atmospheric_hero(city, motion_enabled)
+        and render_atmospheric_hero(
+            "R.K. Puram" if source_choice == "R.K. Puram station" else city,
+            motion_enabled, pollutant_key,
+            STATION_POLLUTANTS[pollutant_key].threshold,
+        )
     )
     if not hero_rendered:
-        render_masthead()
+        render_masthead(pollutant_key)
 
     if fetch_clicked:
         st.session_state.refresh_token += 1
         st.session_state.cpcb_attempt_date = None
         st.session_state.cpcb_status = None
+        st.session_state.station_attempt_date = None
         invalidate_model_cache()
     refresh_token = st.session_state.refresh_token
 
@@ -2610,6 +2694,7 @@ def main() -> None:
     with st.spinner("Checking historical air quality and weather data..."):
         try:
             forecast_context = fetch_forecast_weather(latitude, longitude, refresh_token)
+            forecast_context["today"] = local_today_for_timezone(forecast_context["timezone"])
         except APIUnavailableError as exc:
             data_errors.append(str(exc))
 
@@ -2676,7 +2761,7 @@ def main() -> None:
     if cached_daily.empty and not history.empty:
         cached_daily = history.dropna(
             subset=["CAMS_PM2.5", *CORE_WEATHER_FEATURES]
-        )[["Date", "CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"]].copy()
+        )[["Date", "CAMS_PM2.5", "CAMS_PM10", *WEATHER_FEATURES, "Timezone"]].copy()
 
     local_today = forecast_context["today"] if forecast_context else None
     timezone_name = forecast_context["timezone"] if forecast_context else "Unknown"
@@ -2753,16 +2838,113 @@ def main() -> None:
     for error in data_errors:
         st.warning(error)
 
-    cpcb_status = st.session_state.cpcb_status
-    if cpcb_status:
-        if cpcb_status["state"] == "available":
-            st.success(cpcb_status["message"])
-        elif cpcb_status["state"] == "key_error":
-            st.error(cpcb_status["message"])
-        elif cpcb_status["state"] == "no_data":
-            st.warning(cpcb_status["message"])
-        else:
-            st.info(cpcb_status["message"])
+    station_daily = pd.DataFrame()
+    station_audit: dict[str, Any] | None = None
+    station_context: dict[str, Any] | None = None
+    try:
+        station_daily, station_audit = cached_station_dataset()
+    except (OSError, ValueError):
+        station_daily = pd.DataFrame()
+    if source_choice == "R.K. Puram station" and local_today:
+        try:
+            if station_daily.empty or fetch_clicked or st.session_state.station_attempt_date != local_today:
+                st.session_state.station_attempt_date = local_today
+                with st.spinner("Checking the audited R.K. Puram station archive..."):
+                    station_end = local_today - timedelta(days=1)
+                    station_start = five_year_start(station_end)
+                    station_observations, station_audit = prepare_station(
+                        station_start, station_end
+                    )
+                    if not station_observations.empty:
+                        fetch_station_weather(station_start, max(station_observations["Date"]))
+                    station_daily, station_audit = cached_station_dataset()
+            if not station_daily.empty:
+                station_context = fetch_forecast_weather(
+                    STATION_LATITUDE, STATION_LONGITUDE, refresh_token
+                )
+                station_context["today"] = local_today_for_timezone(station_context["timezone"])
+        except (OSError, ValueError, requests.RequestException, APIUnavailableError) as exc:
+            st.warning(f"Station archive unavailable: {exc}")
+
+    render_coverage_table(cached_daily, station_daily)
+
+    if source_choice == "R.K. Puram station" and not station_daily.empty:
+        st.caption(
+            "Observed R.K. Puram DPCC station data via XKDR and OpenAQ. "
+            "Weather is the Open-Meteo grid for the station coordinates."
+        )
+        station_analysis = render_pollutant_dashboard(
+            station_daily,
+            STATION_POLLUTANTS[pollutant_key],
+            station_context["daily"] if station_context else None,
+            station_context["today"] if station_context else local_today,
+            station_audit,
+            archived_test_weather(
+                station_daily, STATION_POLLUTANTS[pollutant_key].target,
+                STATION_LATITUDE, STATION_LONGITUDE,
+            ),
+        )
+        if station_audit:
+            with st.expander("XKDR / OpenAQ source overlap audit"):
+                st.json(station_audit)
+        selected_station_dates = station_daily.loc[
+            pd.to_numeric(
+                station_daily[STATION_POLLUTANTS[pollutant_key].target], errors="coerce"
+            ).notna(), "Date"
+        ]
+        stale_station = bool(
+            local_today and not selected_station_dates.empty
+            and max(selected_station_dates) < local_today - timedelta(days=5)
+        )
+        if station_analysis is None or stale_station or not station_analysis.get("forward_ready", False):
+            st.warning("The station model cannot issue a current outlook. CAMS outlook follows.")
+            if not cached_daily.empty:
+                render_pollutant_dashboard(
+                    cached_daily, CAMS_POLLUTANTS[pollutant_key],
+                    forecast_context["daily"] if forecast_context else None,
+                    local_today,
+                    historical_forecast_weather=archived_test_weather(
+                        cached_daily, CAMS_POLLUTANTS[pollutant_key].target,
+                        latitude, longitude,
+                    ),
+                )
+    elif not cached_daily.empty:
+        if source_choice == "R.K. Puram station":
+            st.warning("The station source did not pass acquisition and audit; CAMS outlook follows.")
+        render_pollutant_dashboard(
+            cached_daily,
+            CAMS_POLLUTANTS[pollutant_key],
+            forecast_context["daily"] if forecast_context else None,
+            local_today,
+            historical_forecast_weather=archived_test_weather(
+                cached_daily, CAMS_POLLUTANTS[pollutant_key].target,
+                latitude, longitude,
+            ),
+        )
+    else:
+        st.error("No complete CAMS PM2.5 and PM10 history is available in the local cache.")
+
+    if not history.empty:
+        with st.expander("Separate CPCB and manual observations"):
+            cpcb_status = st.session_state.cpcb_status
+            if cpcb_status:
+                if cpcb_status["state"] == "available":
+                    st.success(cpcb_status["message"])
+                elif cpcb_status["state"] == "key_error":
+                    st.error(cpcb_status["message"])
+                elif cpcb_status["state"] == "no_data":
+                    st.warning(cpcb_status["message"])
+                else:
+                    st.info(cpcb_status["message"])
+            observations = history.loc[
+                history[["CPCB_PM2.5", "Manual_PM2.5"]].notna().any(axis=1),
+                ["Date", "CPCB_PM2.5", "Manual_PM2.5", "Timezone"],
+            ]
+            if observations.empty:
+                st.write("No separate station or manual observations have been stored yet.")
+            else:
+                st.dataframe(observations, hide_index=True, use_container_width=True)
+    return
 
     st.subheader("Historical Coverage")
     window: pd.DataFrame | None = None

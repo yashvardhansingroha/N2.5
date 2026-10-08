@@ -248,7 +248,10 @@ def _inject_styles() -> None:
     )
 
 
-def render_atmospheric_hero(city: str, motion_enabled: bool = True) -> bool:
+def render_atmospheric_hero(
+    city: str, motion_enabled: bool = True,
+    pollutant: str = "PM2.5", threshold: float = 60.0,
+) -> bool:
     """Render the optional hero and return whether it replaced the fallback."""
     if not feature_enabled() or not assets_available():
         return False
@@ -267,12 +270,12 @@ def render_atmospheric_hero(city: str, motion_enabled: bool = True) -> bool:
                 <div class="aqv-copy">
                     <div class="aqv-kicker">Live atmospheric intelligence</div>
                     <h1>Urban Air Quality<br><span>Early Warning System</span></h1>
-                    <p>PM2.5 risk, before tomorrow arrives.</p>
+                    <p>{html.escape(pollutant)} risk, before tomorrow arrives.</p>
                 </div>
                 <div class="aqv-readouts">
                     <div class="aqv-readout"><small>Location</small><strong>{safe_city}</strong></div>
                     <div class="aqv-readout"><small>Training cap</small><strong>5 years</strong></div>
-                    <div class="aqv-readout"><small>Alert level</small><strong>60 ug/m3</strong></div>
+                    <div class="aqv-readout"><small>Alert level</small><strong>{threshold:.0f} ug/m3</strong></div>
                 </div>
             </div>
             """,

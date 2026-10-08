@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 import sqlite3
 
@@ -82,6 +82,11 @@ def test_open_meteo_daily_aggregation_and_timezone():
     assert min(abs(daily.iloc[0]["Wind_Direction"]), abs(daily.iloc[0]["Wind_Direction"] - 360)) < 1e-6
 
 
+def test_local_today_uses_response_timezone_at_midnight_boundary():
+    instant = datetime(2026, 10, 8, 18, 31, tzinfo=timezone.utc)
+    assert app.local_today_for_timezone("Asia/Kolkata", instant) == date(2026, 10, 9)
+
+
 def test_database_migration_and_hourly_upsert_are_idempotent(tmp_path: Path):
     path = tmp_path / "cache.sqlite"
     with sqlite3.connect(path) as connection:
@@ -104,6 +109,7 @@ def test_database_migration_and_hourly_upsert_are_idempotent(tmp_path: Path):
             "local_timestamp": times.strftime("%Y-%m-%dT%H:%M:%S"),
             "local_date": ["2026-01-01"] * 24,
             "cams_pm25": np.arange(24, dtype=float),
+            "cams_pm10": np.arange(24, dtype=float) + 20,
             **{column: np.ones(24) for column in app.WEATHER_DAILY_NAMES},
         }
     )
@@ -119,6 +125,7 @@ def test_database_migration_and_hourly_upsert_are_idempotent(tmp_path: Path):
         "x", date(2026, 1, 1), date(2026, 1, 1), path
     )
     assert len(daily) == 1
+    assert daily.iloc[0]["CAMS_PM10"] == 31.5
     assert daily.iloc[0]["Boundary_Layer_Height"] == 1.0
 
 
