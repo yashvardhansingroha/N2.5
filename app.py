@@ -4,9 +4,9 @@ Run with:
     streamlit run app.py
 
 The app caches CAMS, weather, and optional NASA FIRMS observations; compares
-leakage-safe feature groups across four seasonal holdouts; and produces a
-separate seven-day forward forecast. CPCB observations are stored separately
-and are never substituted for the modeled CAMS target.
+leakage-safe feature groups across rolling yearly seasonal holdouts; and
+produces a separate seven-day forward forecast. CPCB observations are stored
+separately and are never substituted for the modeled CAMS target.
 """
 
 from __future__ import annotations
@@ -34,6 +34,13 @@ from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from urllib3.util.retry import Retry
+
+try:
+    from atmospheric_hero import feature_enabled as video_hero_feature_enabled
+    from atmospheric_hero import render_atmospheric_hero
+except ImportError:
+    video_hero_feature_enabled = None
+    render_atmospheric_hero = None
 
 
 DATA_FILE = Path("cpcb_data.csv")
@@ -97,6 +104,7 @@ MODEL_FEATURES = [
     "PM2.5_Yesterday",
 ]
 WEATHER_FEATURES = list(WEATHER_DAILY_NAMES.values())
+CORE_WEATHER_FEATURES = ["Temperature", "Humidity", "Wind_Speed"]
 BASELINE_FEATURES = MODEL_FEATURES.copy()
 HISTORY_FEATURES = [
     "Temperature", "Humidity", "Wind_Speed",
@@ -129,36 +137,19 @@ TEST_DAYS = 30
 BUFFER_DAYS = 120
 FORECAST_DAYS = 7
 CPCB_SAFE_LIMIT = 60.0
-MIN_SEASON_TRAINING_ROWS = 300
+MIN_SEASON_TRAINING_ROWS = 365
 CACHE_SCHEMA_VERSION = 2
-MODEL_CACHE_VERSION = 2
-PRODUCTION_TRAIN_DAYS = 365
-ARCHIVE_START_DATE = date(2024, 8, 11)  # One lag-context day before window 1.
-SEASON_WINDOWS = [
-    {
-        "id": "monsoon_transition",
-        "season": "Monsoon transition",
-        "holdout_start": date(2025, 8, 12),
-        "holdout_end": date(2025, 10, 10),
-    },
-    {
-        "id": "post_monsoon",
-        "season": "Post-monsoon",
-        "holdout_start": date(2025, 10, 21),
-        "holdout_end": date(2025, 12, 19),
-    },
-    {
-        "id": "winter",
-        "season": "Winter",
-        "holdout_start": date(2025, 12, 20),
-        "holdout_end": date(2026, 2, 17),
-    },
-    {
-        "id": "spring",
-        "season": "Spring",
-        "holdout_start": date(2026, 3, 15),
-        "holdout_end": date(2026, 5, 13),
-    },
+MODEL_CACHE_VERSION = 3
+MAX_TRAINING_YEARS = 5
+MIN_PRODUCTION_TRAINING_ROWS = 365
+LAG_CONTEXT_DAYS = 7
+CAMS_COVERAGE_PROBE_START = date(2022, 8, 1)
+CAMS_COVERAGE_PROBE_END = date(2022, 9, 15)
+SEASON_TEMPLATES = [
+    ("monsoon_transition", "Monsoon transition", 0, 8, 12),
+    ("post_monsoon", "Post-monsoon", 0, 10, 21),
+    ("winter", "Winter", 0, 12, 20),
+    ("spring", "Spring", 1, 3, 15),
 ]
 
 
@@ -290,6 +281,43 @@ def parse_hourly_daily(
 def location_key(latitude: float, longitude: float) -> str:
     """Return a stable cache key for a rounded coordinate pair."""
     return f"{latitude:.4f},{longitude:.4f}"
+
+
+def years_ago(day: date, years: int) -> date:
+    """Subtract whole calendar years while handling leap-day cutoffs."""
+    return (pd.Timestamp(day) - pd.DateOffset(years=years)).date()
+
+
+def five_year_training_start(cutoff: date) -> date:
+    """Inclusive first target date in a five-calendar-year training window."""
+    return years_ago(cutoff, MAX_TRAINING_YEARS) + timedelta(days=1)
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def discover_cams_coverage_start(
+    latitude: float, longitude: float, refresh_token: int
+) -> tuple[date, str]:
+    """Find the first complete local CAMS day near the documented global boundary."""
+    del refresh_token
+    payload = get_json(
+        AIR_QUALITY_URL,
+        {
+            "latitude": latitude,
+            "longitude": longitude,
+            "start_date": CAMS_COVERAGE_PROBE_START.isoformat(),
+            "end_date": CAMS_COVERAGE_PROBE_END.isoformat(),
+            "hourly": "pm2_5",
+            "timezone": "auto",
+            "domains": "cams_global",
+        },
+        "Open-Meteo CAMS coverage probe",
+    )
+    daily, timezone_name = parse_hourly_daily(payload, {"pm2_5": "CAMS_PM2.5"})
+    if daily.empty:
+        raise APIUnavailableError(
+            "Open-Meteo returned no complete CAMS days near its global archive boundary."
+        )
+    return min(daily["Date"]), timezone_name
 
 
 def database_connection(path: Path = CACHE_DB_FILE) -> sqlite3.Connection:
@@ -437,7 +465,7 @@ def fetch_hourly_archive_range(
     }
     air_payload = get_json(
         AIR_QUALITY_URL,
-        {**common, "hourly": "pm2_5"},
+        {**common, "hourly": "pm2_5", "domains": "cams_global"},
         "Open-Meteo Air Quality",
     )
     weather_payload = get_json(
@@ -479,12 +507,6 @@ def complete_cached_dates(
            AND COUNT(temperature) = 24
            AND COUNT(humidity) = 24
            AND COUNT(wind_speed) = 24
-           AND COUNT(precipitation) = 24
-           AND COUNT(pressure_msl) = 24
-           AND COUNT(cloud_cover) = 24
-           AND COUNT(wind_direction) = 24
-           AND COUNT(wind_gusts) = 24
-           AND COUNT(boundary_layer_height) = 24
     """
     with database_connection(path) as connection:
         rows = connection.execute(
@@ -662,12 +684,6 @@ def daily_history_from_cache(
         & (frame["temperature_count"] == 24)
         & (frame["humidity_count"] == 24)
         & (frame["wind_count"] == 24)
-        & (frame["precipitation_count"] == 24)
-        & (frame["pressure_count"] == 24)
-        & (frame["cloud_count"] == 24)
-        & (frame["direction_count"] == 24)
-        & (frame["gust_count"] == 24)
-        & (frame["boundary_count"] == 24)
     )
     frame = frame.loc[valid, ["Date", "CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"]].copy()
     frame["Date"] = pd.to_datetime(frame["Date"]).dt.date
@@ -965,7 +981,7 @@ def fetch_historical_bundle(
     }
     air_payload = get_json(
         AIR_QUALITY_URL,
-        {**common_params, "hourly": "pm2_5"},
+        {**common_params, "hourly": "pm2_5", "domains": "cams_global"},
         "Open-Meteo Air Quality",
     )
     weather_payload = get_json(
@@ -1194,7 +1210,7 @@ def upsert_observation(
 
 def select_stored_window(history: pd.DataFrame) -> tuple[pd.DataFrame, date]:
     """Select the latest strict 90-calendar-day CAMS/weather window."""
-    required = ["CAMS_PM2.5", *WEATHER_FEATURES]
+    required = ["CAMS_PM2.5", *CORE_WEATHER_FEATURES]
     usable = history.dropna(subset=required).copy().sort_values("Date")
     if usable.empty:
         raise IncompleteHistoryError("No complete CAMS history is stored locally.")
@@ -1297,15 +1313,27 @@ def add_multifactor_features(
     return pd.DataFrame(rows)
 
 
+def required_model_values(feature_names: list[str]) -> list[str]:
+    """Return target-history inputs that cannot be safely mean-imputed."""
+    return [
+        feature
+        for feature in feature_names
+        if feature == "PM2.5_Yesterday" or feature.startswith("PM2.5_")
+    ]
+
+
 def fit_period_model(
     period: pd.DataFrame, feature_names: list[str] | None = None
 ) -> dict[str, Any]:
     """Fit imputer, training-only anomaly detector, and Random Forest."""
     selected_features = feature_names or MODEL_FEATURES
+    mandatory_features = required_model_values(selected_features)
     data = period.copy().sort_values("Date").reset_index(drop=True)
     if "PM2.5_Yesterday" not in data:
         data = add_calendar_lag(data)
-    model_rows = data.dropna(subset=["CAMS_PM2.5", "PM2.5_Yesterday"]).copy()
+    model_rows = data.dropna(
+        subset=["CAMS_PM2.5", *mandatory_features]
+    ).copy()
     if len(model_rows) < 2:
         raise ValueError("Not enough lagged rows to fit the model.")
 
@@ -1379,23 +1407,71 @@ def invalidate_model_cache(path: Path = MODEL_CACHE_DIR) -> None:
         artifact.unlink(missing_ok=True)
 
 
+def generate_rolling_season_windows(daily_context: pd.DataFrame) -> list[dict[str, Any]]:
+    """Generate every complete 60-day seasonal holdout with at least one prior year."""
+    required = ["CAMS_PM2.5", *CORE_WEATHER_FEATURES]
+    complete = (
+        daily_context.dropna(subset=required)
+        .sort_values("Date")
+        .drop_duplicates("Date", keep="last")
+    )
+    if complete.empty:
+        return []
+    available = set(complete["Date"])
+    first_date = min(available)
+    last_date = max(available)
+    specifications: list[dict[str, Any]] = []
+    for cycle_year in range(first_date.year, last_date.year + 1):
+        for season_id, season, year_offset, month, day_of_month in SEASON_TEMPLATES:
+            holdout_start = date(cycle_year + year_offset, month, day_of_month)
+            holdout_end = holdout_start + timedelta(days=59)
+            if holdout_end > last_date:
+                continue
+            expected_holdout = {
+                holdout_start + timedelta(days=offset) for offset in range(60)
+            }
+            if not expected_holdout.issubset(available):
+                continue
+            training_end = holdout_start - timedelta(days=1)
+            training_start = max(first_date, five_year_training_start(training_end))
+            training_dates = {
+                current
+                for current in available
+                if training_start <= current <= training_end
+            }
+            if len(training_dates) < MIN_SEASON_TRAINING_ROWS:
+                continue
+            specifications.append(
+                {
+                    "id": f"{cycle_year}_{season_id}",
+                    "cycle_year": cycle_year,
+                    "year_label": f"{cycle_year}-{str(cycle_year + 1)[-2:]}",
+                    "season": season,
+                    "holdout_start": holdout_start,
+                    "holdout_end": holdout_end,
+                    "training_start": training_start,
+                    "training_end": training_end,
+                }
+            )
+    return specifications
+
+
 def run_seasonal_backtest(
     daily_context: pd.DataFrame,
     specification: dict[str, Any],
     feature_names: list[str] | None = None,
     feature_group: str = "Baseline",
 ) -> dict[str, Any]:
-    """Fit one isolated 365-calendar-day model and freeze it for 60 days.
+    """Fit one expanding-history model and freeze it for a 60-day holdout.
 
-    The gaps Oct 11-20 and Feb 18-Mar 14 keep reported holdout metrics
-    temporally separated. A later model may independently use those dates in
-    its own preceding training period. Each first holdout lag is seeded only
-    from the true immediately preceding training date.
+    Training contains every earlier complete date available at that origin,
+    capped at five calendar years. The first holdout lag is the true value from
+    the immediately preceding calendar date.
     """
     holdout_start = specification["holdout_start"]
     holdout_end = specification["holdout_end"]
-    training_start = holdout_start - timedelta(days=365)
-    training_end = holdout_start - timedelta(days=1)
+    training_start = specification["training_start"]
+    training_end = specification["training_end"]
     expected_holdout = [
         holdout_start + timedelta(days=offset) for offset in range(60)
     ]
@@ -1403,6 +1479,7 @@ def run_seasonal_backtest(
         raise AssertionError(f"{specification['season']} holdout is not 60 days.")
 
     selected_features = feature_names or MODEL_FEATURES
+    mandatory_features = required_model_values(selected_features)
     data = daily_context.copy().sort_values("Date").reset_index(drop=True)
     lagged = data if "PM2.5_Yesterday" in data else add_calendar_lag(data, data)
     training = lagged.loc[
@@ -1422,14 +1499,14 @@ def run_seasonal_backtest(
         raise AssertionError("Seasonal training and holdout date sets overlap.")
 
     valid_training = training.dropna(
-        subset=["CAMS_PM2.5", *selected_features]
+        subset=["CAMS_PM2.5", *mandatory_features]
     ).copy()
     if len(valid_training) < MIN_SEASON_TRAINING_ROWS:
         raise IncompleteHistoryError(
             f"{specification['season']} has only {len(valid_training)} valid "
             f"training rows; {MIN_SEASON_TRAINING_ROWS} are required."
         )
-    if holdout[["CAMS_PM2.5", *selected_features]].isna().any().any():
+    if holdout[["CAMS_PM2.5", *mandatory_features]].isna().any().any():
         raise IncompleteHistoryError(
             f"{specification['season']} holdout or lag context is incomplete."
         )
@@ -1465,6 +1542,8 @@ def run_seasonal_backtest(
     return {
         **fitted,
         "window_id": specification["id"],
+        "cycle_year": specification["cycle_year"],
+        "year_label": specification["year_label"],
         "feature_group": feature_group,
         "season": specification["season"],
         "training_start": training_start,
@@ -1496,7 +1575,7 @@ def cached_seasonal_backtest(
     path: Path = MODEL_CACHE_DIR,
 ) -> tuple[dict[str, Any], bool]:
     """Load or build one versioned per-window model and metrics artifact."""
-    start = specification["holdout_start"] - timedelta(days=366)
+    start = specification["training_start"]
     end = specification["holdout_end"]
     relevant = daily_context.loc[daily_context["Date"].between(start, end)].copy()
     selected_features = feature_names or MODEL_FEATURES
@@ -1539,7 +1618,12 @@ def build_seasonal_backtests(
     results: list[dict[str, Any]] = []
     cache_hits = 0
     model_ids: set[int] = set()
-    for specification in SEASON_WINDOWS:
+    specifications = generate_rolling_season_windows(daily_context)
+    if not specifications:
+        raise IncompleteHistoryError(
+            "No complete rolling seasonal holdout has at least 365 earlier training rows."
+        )
+    for specification in specifications:
         result, cache_hit = cached_seasonal_backtest(
             daily_context, specification, cache_location, feature_names, feature_group
         )
@@ -1572,21 +1656,51 @@ def evaluate_feature_candidates(
         cache_hits += hits
 
     baseline = by_group["Baseline"]
+    baseline_by_id = {item["window_id"]: item for item in baseline}
     baseline_median = float(np.median([item["model_mae"] for item in baseline]))
-    baseline_recalls = [item["classification"]["Recall"] for item in baseline]
+    window_count = len(baseline)
+    season_names = sorted({item["season"] for item in baseline})
+    year_labels = sorted({item["year_label"] for item in baseline})
+    required_windows = math.ceil(0.75 * window_count)
+    required_seasons = math.ceil(0.75 * len(season_names))
+    required_years = math.ceil(0.75 * len(year_labels))
     decisions: list[dict[str, Any]] = []
     eligible: list[dict[str, Any]] = []
     for name, results in by_group.items():
         maes = [item["model_mae"] for item in results]
         median_mae = float(np.median(maes))
         improvement = 100.0 * (baseline_median - median_mae) / baseline_median if baseline_median else 0.0
-        seasons_not_worse = sum(
-            candidate["model_mae"] <= reference["model_mae"] + 1e-9
-            for candidate, reference in zip(results, baseline)
+        windows_not_worse = sum(
+            candidate["model_mae"]
+            <= baseline_by_id[candidate["window_id"]]["model_mae"] + 1e-9
+            for candidate in results
         )
+        seasons_not_worse = 0
+        for season in season_names:
+            candidate_values = [
+                item["model_mae"] for item in results if item["season"] == season
+            ]
+            baseline_values = [
+                item["model_mae"] for item in baseline if item["season"] == season
+            ]
+            seasons_not_worse += int(
+                np.median(candidate_values) <= np.median(baseline_values) + 1e-9
+            )
+        years_not_worse = 0
+        for year_label in year_labels:
+            candidate_values = [
+                item["model_mae"] for item in results if item["year_label"] == year_label
+            ]
+            baseline_values = [
+                item["model_mae"] for item in baseline if item["year_label"] == year_label
+            ]
+            years_not_worse += int(
+                np.median(candidate_values) <= np.median(baseline_values) + 1e-9
+            )
         recall_drop = 0.0
         recall_valid = True
-        for candidate, reference_recall in zip(results, baseline_recalls):
+        for candidate in results:
+            reference_recall = baseline_by_id[candidate["window_id"]]["classification"]["Recall"]
             candidate_recall = candidate["classification"]["Recall"]
             if reference_recall is not None and candidate_recall is None:
                 recall_valid = False
@@ -1595,7 +1709,9 @@ def evaluate_feature_candidates(
         promoted = (
             name != "Baseline"
             and improvement >= 2.0
-            and seasons_not_worse >= 3
+            and windows_not_worse >= required_windows
+            and seasons_not_worse >= required_seasons
+            and years_not_worse >= required_years
             and recall_valid
             and recall_drop <= 0.05 + 1e-12
         )
@@ -1603,7 +1719,9 @@ def evaluate_feature_candidates(
             "Feature group": name,
             "Median MAE": median_mae,
             "Median improvement (%)": improvement,
-            "Seasons improved or tied": seasons_not_worse,
+            "Windows improved or tied": f"{windows_not_worse}/{window_count}",
+            "Seasons improved or tied": f"{seasons_not_worse}/{len(season_names)}",
+            "Years improved or tied": f"{years_not_worse}/{len(year_labels)}",
             "Worst recall drop (points)": 100.0 * recall_drop,
             "Passes gate": promoted,
         }
@@ -1617,7 +1735,10 @@ def evaluate_feature_candidates(
         "selected_group": selected,
         "selected_features": groups[selected],
         "cache_hits": cache_hits,
-        "artifact_count": 4 * len(groups),
+        "artifact_count": window_count * len(groups),
+        "window_count": window_count,
+        "year_count": len(year_labels),
+        "season_count": len(season_names),
     }
 
 
@@ -1639,7 +1760,7 @@ def grouped_permutation_importance(
         actual = result["results"]["Actual"].to_numpy(dtype=float)
         importance = permutation_importance(
             result["model"], transformed, actual,
-            scoring="neg_mean_absolute_error", n_repeats=5, random_state=42, n_jobs=-1,
+            scoring="neg_mean_absolute_error", n_repeats=3, random_state=42, n_jobs=1,
         )
         for feature, value in zip(features, importance.importances_mean):
             rows.append(
@@ -1658,6 +1779,38 @@ def grouped_permutation_importance(
         .sort_values("MAE increase when shuffled", ascending=False)
         .reset_index(drop=True)
     )
+
+
+def cached_grouped_permutation_importance(
+    seasonal_results: list[dict[str, Any]],
+    path: Path = MODEL_CACHE_DIR,
+) -> tuple[pd.DataFrame, bool]:
+    """Persist grouped permutation importance for an unchanged artifact set."""
+    fingerprints = [
+        result.get("artifact_fingerprint", result["window_id"])
+        for result in seasonal_results
+    ]
+    signature = hashlib.sha256(
+        json.dumps(
+            {
+                "cache_version": MODEL_CACHE_VERSION,
+                "repeats": 3,
+                "jobs": 1,
+                "artifacts": fingerprints,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+    path.mkdir(parents=True, exist_ok=True)
+    artifact_path = path / f"permutation_importance_{signature}.joblib"
+    if artifact_path.exists():
+        return joblib.load(artifact_path), True
+    importance = grouped_permutation_importance(seasonal_results)
+    joblib.dump(importance, artifact_path)
+    for stale in path.glob("permutation_importance_*.joblib"):
+        if stale != artifact_path:
+            stale.unlink(missing_ok=True)
+    return importance, False
 
 
 def run_backtest(window: pd.DataFrame) -> dict[str, Any]:
@@ -1814,21 +1967,37 @@ def create_production_forecast(
 def select_production_training(
     engineered: pd.DataFrame, feature_names: list[str]
 ) -> tuple[pd.DataFrame, int]:
-    """Prefer 365 complete calendar days and fall back to the latest 90."""
-    complete = engineered.dropna(subset=["CAMS_PM2.5", *feature_names]).copy()
+    """Select the latest contiguous usable history, capped at five calendar years."""
+    mandatory_features = required_model_values(feature_names)
+    complete = (
+        engineered.dropna(subset=["CAMS_PM2.5", *mandatory_features])
+        .sort_values("Date")
+        .drop_duplicates("Date", keep="last")
+        .copy()
+    )
     if complete.empty:
         raise ValueError("No complete rows are available for the selected production model.")
     cutoff = complete["Date"].max()
     available = set(complete["Date"])
-    for requested_days in (PRODUCTION_TRAIN_DAYS, HISTORY_DAYS):
-        expected = [
-            cutoff - timedelta(days=offset)
-            for offset in range(requested_days - 1, -1, -1)
-        ]
-        if set(expected).issubset(available):
-            selected = complete.loc[complete["Date"].isin(expected)].sort_values("Date")
-            return selected.reset_index(drop=True), requested_days
-    raise ValueError("Neither a complete 365-day nor 90-day production period is available.")
+    cap_start = five_year_training_start(cutoff)
+    contiguous_start = cutoff
+    while (
+        contiguous_start - timedelta(days=1) in available
+        and contiguous_start > cap_start
+    ):
+        contiguous_start -= timedelta(days=1)
+    selected = complete.loc[
+        complete["Date"].between(contiguous_start, cutoff)
+    ].sort_values("Date")
+    if len(selected) < MIN_PRODUCTION_TRAINING_ROWS:
+        raise ValueError(
+            f"Only {len(selected)} contiguous usable production rows are available; "
+            f"{MIN_PRODUCTION_TRAINING_ROWS} are required."
+        )
+    expected = pd.date_range(contiguous_start, cutoff, freq="D").date
+    if len(expected) != len(selected) or set(expected) != set(selected["Date"]):
+        raise AssertionError("Production training dates are not contiguous.")
+    return selected.reset_index(drop=True), int(len(selected))
 
 
 def create_multifactor_production_forecast(
@@ -1869,10 +2038,11 @@ def create_multifactor_production_forecast(
         feature_row = add_multifactor_features(
             candidate, fire_observations, fire_data_complete
         ).loc[lambda value: value["Date"] == forecast_date]
-        if feature_row.empty or feature_row[feature_names].isna().any().any():
-            missing = feature_row[feature_names].columns[
-                feature_row[feature_names].isna().any()
-            ].tolist() if not feature_row.empty else feature_names
+        mandatory_features = required_model_values(feature_names)
+        if feature_row.empty or feature_row[mandatory_features].isna().any().any():
+            missing = feature_row[mandatory_features].columns[
+                feature_row[mandatory_features].isna().any()
+            ].tolist() if not feature_row.empty else mandatory_features
             raise ValueError("Forecast factors are missing: " + ", ".join(missing))
         transformed = fitted["imputer"].transform(feature_row[feature_names])
         tree_predictions = np.array(
@@ -2017,30 +2187,46 @@ def prospective_evaluation(
     return frame
 
 
+def style_chart(figure: plt.Figure, axis: plt.Axes) -> None:
+    """Match Matplotlib output to the dashboard without hiding chart structure."""
+    figure.patch.set_facecolor("#101719")
+    axis.set_facecolor("#101719")
+    axis.tick_params(colors="#9badb0", labelsize=9)
+    axis.xaxis.label.set_color("#9badb0")
+    axis.yaxis.label.set_color("#9badb0")
+    axis.grid(axis="y", color="#293439", linewidth=0.8, alpha=0.9)
+    axis.spines[["top", "right"]].set_visible(False)
+    axis.spines[["left", "bottom"]].set_color("#405158")
+    legend = axis.legend(
+        frameon=False,
+        labelcolor="#dce8e6",
+        loc="upper left",
+        ncol=min(4, len(axis.get_legend_handles_labels()[0])),
+    )
+    if legend:
+        legend.get_frame().set_facecolor("#101719")
+    figure.tight_layout()
+
+
 def backtest_chart(results: pd.DataFrame) -> plt.Figure:
     figure, axis = plt.subplots(figsize=(11, 4.5))
-    axis.plot(results["Date"], results["Actual"], label="Actual CAMS", color="#173f5f", linewidth=2.2)
-    axis.plot(results["Date"], results["Model"], label="Random Forest", color="#2f8f5b", linewidth=1.8)
-    axis.plot(results["Date"], results["Persistence"], label="Persistence", color="#777777", linestyle="--")
-    axis.axhline(CPCB_SAFE_LIMIT, color="#c9342f", linestyle=":", label="60 ug/m3 threshold")
+    axis.plot(results["Date"], results["Actual"], label="Actual CAMS", color="#62d6d6", linewidth=2.3)
+    axis.plot(results["Date"], results["Model"], label="Random Forest", color="#ff6b5f", linewidth=1.9)
+    axis.plot(results["Date"], results["Persistence"], label="Persistence", color="#f2c14e", linestyle="--", linewidth=1.4)
+    axis.axhline(CPCB_SAFE_LIMIT, color="#ff4057", linestyle=":", label="60 ug/m3 threshold")
     axis.set_ylabel("Daily mean PM2.5 (ug/m3)")
-    axis.grid(axis="y", color="#dce3e7", linewidth=0.8)
-    axis.spines[["top", "right"]].set_visible(False)
-    axis.legend(frameon=False, ncol=4)
     figure.autofmt_xdate(rotation=25)
-    figure.tight_layout()
+    style_chart(figure, axis)
     return figure
 
 
 def recursive_chart(metrics: pd.DataFrame) -> plt.Figure:
     figure, axis = plt.subplots(figsize=(8, 3.8))
-    axis.plot(metrics["Day_Ahead"], metrics["MAE"], color="#7a3e9d", marker="o", linewidth=2)
+    axis.plot(metrics["Day_Ahead"], metrics["MAE"], color="#62d6d6", marker="s", markersize=5, linewidth=2.2, label="Recursive MAE")
     axis.set_xticks(range(1, 8))
     axis.set_xlabel("Recursive forecast horizon (days ahead)")
     axis.set_ylabel("MAE (ug/m3)")
-    axis.grid(axis="y", color="#dce3e7", linewidth=0.8)
-    axis.spines[["top", "right"]].set_visible(False)
-    figure.tight_layout()
+    style_chart(figure, axis)
     return figure
 
 
@@ -2050,18 +2236,15 @@ def forecast_chart(forecast: pd.DataFrame) -> plt.Figure:
         forecast["Date"],
         forecast["Lower_80"],
         forecast["Upper_80"],
-        color="#b8d8c5",
-        alpha=0.65,
+        color="#315c60",
+        alpha=0.72,
         label="Widened 80% interval",
     )
-    axis.plot(forecast["Date"], forecast["Prediction"], color="#176b45", marker="o", linewidth=2.2)
-    axis.axhline(CPCB_SAFE_LIMIT, color="#c9342f", linestyle="--", label="60 ug/m3 threshold")
+    axis.plot(forecast["Date"], forecast["Prediction"], color="#70d6a5", marker="s", markersize=5, linewidth=2.3, label="Forecast")
+    axis.axhline(CPCB_SAFE_LIMIT, color="#ff4057", linestyle="--", label="60 ug/m3 threshold")
     axis.set_ylabel("Forecast PM2.5 (ug/m3)")
-    axis.grid(axis="y", color="#dce3e7", linewidth=0.8)
-    axis.spines[["top", "right"]].set_visible(False)
-    axis.legend(frameon=False)
     figure.autofmt_xdate(rotation=20)
-    figure.tight_layout()
+    style_chart(figure, axis)
     return figure
 
 
@@ -2085,17 +2268,268 @@ def format_rate(value: float | None) -> str:
     return "N/A" if value is None else f"{100 * value:.1f}%"
 
 
+def render_visual_system() -> None:
+    """Apply the dashboard's atmospheric operations-console visual system."""
+    st.markdown(
+        """
+        <style>
+        :root {
+            --aq-bg: #0b1012;
+            --aq-panel: #151b1e;
+            --aq-panel-2: #101618;
+            --aq-line: #293439;
+            --aq-text: #f3f7f5;
+            --aq-muted: #9badb0;
+            --aq-cyan: #62d6d6;
+            --aq-coral: #ff6b5f;
+            --aq-amber: #f2c14e;
+            --aq-green: #70d6a5;
+        }
+        html, body, [class*="css"] {
+            letter-spacing: 0 !important;
+        }
+        [data-testid="stAppViewContainer"] {
+            background: var(--aq-bg);
+            color: var(--aq-text);
+        }
+        [data-testid="stHeader"] {
+            background: rgba(11, 16, 18, 0.94);
+            border-bottom: 1px solid var(--aq-line);
+        }
+        [data-testid="stMainBlockContainer"] {
+            max-width: 1260px;
+            padding-top: 1.25rem;
+            padding-bottom: 4rem;
+        }
+        [data-testid="stSidebar"] {
+            background: #101517;
+            border-right: 1px solid var(--aq-line);
+        }
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            gap: 0.65rem;
+        }
+        [data-testid="stSidebar"] h2 {
+            font-size: 1.05rem;
+            color: var(--aq-text);
+            border: 0;
+            padding: 0;
+        }
+        [data-testid="stSidebar"] h3 {
+            font-size: 0.85rem;
+            color: var(--aq-cyan);
+            text-transform: uppercase;
+        }
+        .aq-masthead {
+            position: relative;
+            min-height: 230px;
+            overflow: hidden;
+            border-top: 1px solid #395158;
+            border-bottom: 1px solid var(--aq-line);
+            padding: 2.4rem 2rem 2rem;
+            margin: 0 0 1.8rem;
+            background: #101719;
+        }
+        .aq-masthead-content {
+            position: relative;
+            z-index: 2;
+            max-width: 760px;
+        }
+        .aq-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: var(--aq-cyan);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .aq-kicker-mark {
+            display: inline-block;
+            width: 18px;
+            height: 5px;
+            background: var(--aq-coral);
+        }
+        .aq-masthead h1 {
+            max-width: 760px;
+            margin: 0.8rem 0 0.7rem;
+            color: var(--aq-text);
+            font-size: 2.7rem;
+            line-height: 1.04;
+            font-weight: 760;
+            letter-spacing: 0;
+        }
+        .aq-masthead h1 span {
+            color: var(--aq-cyan);
+        }
+        .aq-masthead p {
+            max-width: 680px;
+            margin: 0;
+            color: var(--aq-muted);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+        .aq-airflow {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            opacity: 0.54;
+            pointer-events: none;
+        }
+        .aq-stream {
+            position: absolute;
+            left: -42%;
+            width: 34%;
+            height: 2px;
+            background: var(--aq-cyan);
+            animation: aq-drift 10s linear infinite;
+        }
+        .aq-stream::after {
+            content: "";
+            position: absolute;
+            right: -34px;
+            top: -2px;
+            width: 24px;
+            height: 6px;
+            background: var(--aq-coral);
+        }
+        .aq-stream.s1 { top: 20%; animation-duration: 12s; }
+        .aq-stream.s2 { top: 42%; animation-delay: -7s; animation-duration: 15s; opacity: 0.65; }
+        .aq-stream.s3 { top: 67%; animation-delay: -3s; animation-duration: 11s; opacity: 0.42; }
+        .aq-stream.s4 { top: 84%; animation-delay: -10s; animation-duration: 18s; opacity: 0.3; }
+        @keyframes aq-drift {
+            from { transform: translateX(0); }
+            to { transform: translateX(430%); }
+        }
+        section.main h2 {
+            margin-top: 2.1rem;
+            padding-left: 0.8rem;
+            border-left: 4px solid var(--aq-coral);
+            color: var(--aq-text);
+            font-size: 1.65rem;
+            line-height: 1.2;
+        }
+        section.main h3 {
+            margin-top: 1.5rem;
+            color: var(--aq-cyan);
+            font-size: 1.08rem;
+            text-transform: uppercase;
+        }
+        section.main p, [data-testid="stCaptionContainer"] {
+            color: var(--aq-muted);
+        }
+        [data-testid="stMetric"] {
+            min-height: 112px;
+            padding: 1rem 1rem 0.85rem;
+            background: var(--aq-panel);
+            border: 1px solid var(--aq-line);
+            border-top: 3px solid var(--aq-cyan);
+            border-radius: 6px;
+        }
+        [data-testid="stMetricLabel"] {
+            color: var(--aq-muted);
+            font-size: 0.76rem;
+            text-transform: uppercase;
+        }
+        [data-testid="stMetricValue"] {
+            color: var(--aq-text);
+            font-variant-numeric: tabular-nums;
+        }
+        [data-testid="stAlert"] {
+            border-radius: 6px;
+            border-width: 1px;
+            border-left-width: 4px;
+            background: var(--aq-panel);
+        }
+        [data-testid="stDataFrame"] {
+            border: 1px solid var(--aq-line);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        [data-testid="stExpander"] {
+            border: 1px solid var(--aq-line);
+            border-radius: 6px;
+            background: var(--aq-panel-2);
+        }
+        [data-baseweb="input"], [data-baseweb="select"] > div {
+            border-radius: 5px !important;
+            border-color: var(--aq-line) !important;
+            background: #0d1214 !important;
+        }
+        div.stButton > button, div.stDownloadButton > button {
+            min-height: 2.65rem;
+            border-radius: 5px;
+            border: 1px solid var(--aq-coral);
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+        div.stButton > button:hover, div.stDownloadButton > button:hover {
+            border-color: var(--aq-cyan);
+            color: var(--aq-cyan);
+        }
+        hr {
+            border-color: var(--aq-line) !important;
+        }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--aq-bg); }
+        ::-webkit-scrollbar-thumb { background: #405158; border-radius: 4px; }
+        @media (max-width: 700px) {
+            [data-testid="stMainBlockContainer"] {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .aq-masthead {
+                min-height: 245px;
+                padding: 2rem 1.25rem 1.6rem;
+            }
+            .aq-masthead h1 {
+                font-size: 2rem;
+                line-height: 1.08;
+            }
+            .aq-masthead p { font-size: 0.92rem; }
+            .aq-airflow { opacity: 0.38; }
+            .aq-stream.s1 { top: 15%; }
+            .aq-stream.s4 { top: 92%; }
+            .aq-stream.s2, .aq-stream.s3 { display: none; }
+            section.main h2 { font-size: 1.35rem; }
+            [data-testid="stMetric"] { min-height: 96px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .aq-stream { animation: none; }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_masthead() -> None:
+    st.markdown(
+        """
+        <div class="aq-masthead">
+            <div class="aq-airflow" aria-hidden="true">
+                <span class="aq-stream s1"></span>
+                <span class="aq-stream s2"></span>
+                <span class="aq-stream s3"></span>
+                <span class="aq-stream s4"></span>
+            </div>
+            <div class="aq-masthead-content">
+                <div class="aq-kicker"><span class="aq-kicker-mark"></span>PM2.5 / Urban Atmosphere</div>
+                <h1>Urban Air Quality<br><span>Early Warning System</span></h1>
+                <p>Maximum-available CAMS training under a five-year cap, rolling yearly seasonal backtests, prospective evaluation, and a seven-day PM2.5 forecast.</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     st.set_page_config(
         page_title="Urban Air Quality Early Warning",
         page_icon="AQ",
         layout="wide",
     )
-    st.title("Urban Air Quality Early Warning System")
-    st.write(
-        "Season-balanced historical development backtests, a separate 90-day "
-        "validation, prospective evaluation, and a seven-day PM2.5 forecast."
-    )
+    render_visual_system()
     initialize_database()
 
     if "refresh_token" not in st.session_state:
@@ -2105,6 +2539,12 @@ def main() -> None:
     if "cpcb_status" not in st.session_state:
         st.session_state.cpcb_status = None
 
+    video_hero_active = bool(
+        render_atmospheric_hero
+        and video_hero_feature_enabled
+        and video_hero_feature_enabled()
+    )
+    motion_enabled = True
     with st.sidebar:
         st.header("Location and data")
         city = st.text_input("City", value="Delhi").strip()
@@ -2117,6 +2557,14 @@ def main() -> None:
             "NASA FIRMS MAP_KEY (optional)", type="password",
             help="Enables satellite-detected thermal activity factors. The key is never stored by the app.",
         )
+        if video_hero_active:
+            st.divider()
+            st.subheader("Display")
+            motion_enabled = st.checkbox(
+                "Atmospheric motion",
+                value=True,
+                help="Pause the decorative city video while retaining its poster image.",
+            )
         st.divider()
         st.subheader("Manual observation")
         save_manual = st.checkbox("Save a separate manual PM2.5 value")
@@ -2129,6 +2577,14 @@ def main() -> None:
             "The app checks for stale data when opened. Updates while it is closed "
             "require an external scheduler."
         )
+
+    hero_rendered = bool(
+        video_hero_active
+        and render_atmospheric_hero
+        and render_atmospheric_hero(city, motion_enabled)
+    )
+    if not hero_rendered:
+        render_masthead()
 
     if fetch_clicked:
         st.session_state.refresh_token += 1
@@ -2144,6 +2600,10 @@ def main() -> None:
     fire_summary: dict[str, Any] | None = None
     fire_observations = pd.DataFrame()
     fire_data_complete = False
+    cams_source_start: date | None = None
+    archive_start: date | None = None
+    archive_end: date | None = None
+    requested_training_start: date | None = None
     cache_location = location_key(latitude, longitude)
     data_errors: list[str] = []
 
@@ -2156,22 +2616,34 @@ def main() -> None:
         if forecast_context:
             try:
                 archive_end = forecast_context["today"] - timedelta(days=1)
+                requested_training_start = five_year_training_start(archive_end)
+                cams_source_start, coverage_timezone = discover_cams_coverage_start(
+                    latitude, longitude, refresh_token
+                )
+                if coverage_timezone != forecast_context["timezone"]:
+                    raise APIUnavailableError(
+                        "CAMS coverage and forecast responses returned different timezones."
+                    )
+                archive_start = max(
+                    cams_source_start,
+                    requested_training_start - timedelta(days=LAG_CONTEXT_DAYS),
+                )
                 cache_summary = ensure_hourly_cache(
                     latitude,
                     longitude,
-                    ARCHIVE_START_DATE,
+                    archive_start,
                     archive_end,
                     refresh_token,
                 )
                 cached_daily = daily_history_from_cache(
-                    cache_location, ARCHIVE_START_DATE, archive_end
+                    cache_location, archive_start, archive_end
                 )
                 history = merge_historical_rows(history, cached_daily)
                 save_history(history, DATA_FILE)
             except APIUnavailableError as exc:
                 data_errors.append(str(exc))
 
-            fire_start = ARCHIVE_START_DATE - timedelta(days=7)
+            fire_start = archive_start or CAMS_COVERAGE_PROBE_START
             fire_end = forecast_context["today"]
             if firms_key:
                 try:
@@ -2195,7 +2667,7 @@ def main() -> None:
 
     if cached_daily.empty:
         cached_daily = daily_history_from_cache(
-            cache_location, ARCHIVE_START_DATE, date.today()
+            cache_location, CAMS_COVERAGE_PROBE_START, date.today()
         )
         if not cached_daily.empty:
             history = merge_historical_rows(history, cached_daily)
@@ -2203,7 +2675,7 @@ def main() -> None:
 
     if cached_daily.empty and not history.empty:
         cached_daily = history.dropna(
-            subset=["CAMS_PM2.5", *WEATHER_FEATURES]
+            subset=["CAMS_PM2.5", *CORE_WEATHER_FEATURES]
         )[["Date", "CAMS_PM2.5", *WEATHER_FEATURES, "Timezone"]].copy()
 
     local_today = forecast_context["today"] if forecast_context else None
@@ -2292,18 +2764,30 @@ def main() -> None:
         else:
             st.info(cpcb_status["message"])
 
-    st.subheader("Data Readiness")
+    st.subheader("Historical Coverage")
     window: pd.DataFrame | None = None
     cutoff: date | None = None
     try:
         window, cutoff = select_stored_window(history)
-        status_a, status_b, status_c = st.columns(3)
-        status_a.metric("Complete CAMS days", len(window))
-        status_b.metric("Latest complete date", cutoff.isoformat())
-        status_c.metric("API timezone", str(window.iloc[-1]["Timezone"]))
+        complete_dates = sorted(set(cached_daily["Date"])) if not cached_daily.empty else []
+        earliest_complete = min(complete_dates) if complete_dates else window.iloc[0]["Date"]
+        latest_complete = max(complete_dates) if complete_dates else cutoff
+        cap_start = five_year_training_start(latest_complete)
+        expected_cap_dates = {
+            cap_start + timedelta(days=offset)
+            for offset in range((latest_complete - cap_start).days + 1)
+        }
+        missing_cap_dates = expected_cap_dates - set(complete_dates)
+        status_a, status_b, status_c, status_d = st.columns(4)
+        status_a.metric("Complete CAMS days", len(complete_dates))
+        status_b.metric("Earliest complete date", earliest_complete.isoformat())
+        status_c.metric("Latest complete date", latest_complete.isoformat())
+        status_d.metric("Unavailable days", len(missing_cap_dates))
         st.caption(
-            f"Training target: CAMS modeled PM2.5. Window: {window.iloc[0]['Date']} "
-            f"through {cutoff}. CPCB and manual observations are stored separately."
+            f"Requested training cap: {cap_start} through {latest_complete}. Source boundary "
+            f"detected at {cams_source_start or earliest_complete}. API timezone: "
+            f"{window.iloc[-1]['Timezone']}. The separate development validation uses the "
+            f"latest 90 days. CPCB and manual observations remain separate."
         )
     except IncompleteHistoryError as exc:
         st.error(str(exc))
@@ -2340,10 +2824,10 @@ def main() -> None:
     selected_group = "Baseline"
     if not cached_daily.empty:
         st.divider()
-        st.header("Season-Balanced Historical Backtests")
+        st.header("Rolling Yearly Seasonal Backtests")
         st.write(
-            "Four independently fitted historical development backtests cover "
-            "different seasonal pollution regimes. These are not prospective/live accuracy."
+            "Each eligible 60-day holdout uses an independently fitted model trained on "
+            "all earlier complete history available at that origin, capped at five years."
         )
         try:
             with st.spinner("Comparing leakage-safe feature groups across seasonal holdouts..."):
@@ -2360,10 +2844,18 @@ def main() -> None:
                 gate_display[column] = gate_display[column].round(2)
             st.dataframe(gate_display, hide_index=True, use_container_width=True)
             season_comparison = []
-            for index, specification in enumerate(SEASON_WINDOWS):
-                row = {"Season": specification["season"]}
+            baseline_windows = candidate_evaluation["by_group"]["Baseline"]
+            for baseline_result in baseline_windows:
+                row = {
+                    "Year": baseline_result["year_label"],
+                    "Season": baseline_result["season"],
+                }
                 for group_name, group_results in candidate_evaluation["by_group"].items():
-                    row[f"{group_name} MAE"] = round(group_results[index]["model_mae"], 2)
+                    matched = next(
+                        item for item in group_results
+                        if item["window_id"] == baseline_result["window_id"]
+                    )
+                    row[f"{group_name} MAE"] = round(matched["model_mae"], 2)
                 season_comparison.append(row)
             st.dataframe(
                 pd.DataFrame(season_comparison), hide_index=True, use_container_width=True
@@ -2376,14 +2868,30 @@ def main() -> None:
             else:
                 st.success(f"Promoted production feature group: {selected_group}.")
             st.caption(
-                "Promotion requires at least 2% lower median MAE, improvement or a tie in "
-                "three of four seasons, and no recall loss greater than five percentage points."
+                "Promotion requires at least 2% lower overall median MAE, improvement or a "
+                "tie in at least 75% of individual windows, years, and seasons, and no "
+                "exceedance-recall loss greater than five percentage points."
             )
+            year_options = sorted({result["year_label"] for result in seasonal_results})
+            season_options = sorted({result["season"] for result in seasonal_results})
+            filter_a, filter_b = st.columns(2)
+            selected_years = filter_a.multiselect(
+                "Backtest years", year_options, default=year_options
+            )
+            selected_seasons = filter_b.multiselect(
+                "Backtest seasons", season_options, default=season_options
+            )
+            visible_results = [
+                result for result in seasonal_results
+                if result["year_label"] in selected_years
+                and result["season"] in selected_seasons
+            ]
             summary_rows = []
-            for result in seasonal_results:
+            for result in visible_results:
                 classification = result["classification"]
                 summary_rows.append(
                     {
+                        "Year": result["year_label"],
                         "Season": result["season"],
                         "Holdout": (
                             f"{result['holdout_start']} to {result['holdout_end']}"
@@ -2421,7 +2929,7 @@ def main() -> None:
             }
             for label, key in aggregate_fields.items():
                 values = pd.Series(
-                    [result[key] for result in seasonal_results], dtype="float64"
+                    [result[key] for result in visible_results], dtype="float64"
                 ).dropna()
                 aggregate_rows.append(
                     {
@@ -2435,12 +2943,14 @@ def main() -> None:
                         ),
                     }
                 )
-            st.subheader("Across-Season Summary")
+            st.subheader("Selected Backtest Summary")
             st.dataframe(pd.DataFrame(aggregate_rows), hide_index=True, use_container_width=True)
             st.caption(
-                "Only four windows are included, and their 365-day training histories "
-                "overlap substantially. Mean, median, and standard deviation are rough "
-                "descriptors, not independent estimates of model variability."
+                f"The current selection contains {len(visible_results)} holdouts from "
+                f"{candidate_evaluation['year_count']} eligible yearly cycles. Expanding "
+                "training histories overlap, so dispersion is descriptive rather than an "
+                "independent uncertainty estimate. Historical actual weather makes these "
+                "development results optimistic."
             )
 
             st.subheader("Forecast Factors")
@@ -2464,25 +2974,22 @@ def main() -> None:
             st.dataframe(
                 pd.DataFrame([latest_factors]), hide_index=True, use_container_width=True
             )
-            importance_key = "importance:" + selected_group + ":" + ":".join(
-                result.get("artifact_fingerprint", result["window_id"])
-                for result in seasonal_results
+            importance, importance_cache_hit = cached_grouped_permutation_importance(
+                seasonal_results
             )
-            if importance_key not in st.session_state:
-                st.session_state[importance_key] = grouped_permutation_importance(seasonal_results)
-            importance = st.session_state[importance_key]
             if not importance.empty:
                 st.dataframe(importance.round(3), hide_index=True, use_container_width=True)
             st.caption(
                 "Permutation importance reports the average holdout MAE increase after a factor "
                 "family is disrupted. It describes predictive usefulness, not causation. "
+                f"Importance artifact reused: {'yes' if importance_cache_hit else 'no'}. "
                 "Holiday and weekend signals are activity proxies, not measured traffic. "
                 "FIRMS detections are satellite-observed thermal activity, not confirmed crop burning."
             )
 
-            for result in seasonal_results:
+            for result in visible_results:
                 with st.expander(
-                    f"{result['season']}: actual vs model vs persistence"
+                    f"{result['year_label']} {result['season']}: actual vs model vs persistence"
                 ):
                     chart = backtest_chart(result["results"])
                     st.pyplot(chart, use_container_width=True)
@@ -2614,9 +3121,13 @@ def main() -> None:
                         st.success("All seven modeled daily forecasts are at or below 60 ug/m3.")
                     if production["used_fallback"]:
                         st.info("The production fit used the Isolation Forest fallback.")
+                    production_rows = production["model_rows"].sort_values("Date")
                     st.caption(
-                        f"Production group: {selected_group}; trained on the latest "
-                        f"{production['training_days']} complete days. This is a CAMS-trained "
+                        f"Production group: {selected_group}; trained on "
+                        f"{production['training_days']} contiguous complete days from "
+                        f"{production_rows.iloc[0]['Date']} through "
+                        f"{production_rows.iloc[-1]['Date']}, under a five-calendar-year cap. "
+                        "This is a CAMS-trained "
                         "modeled baseline, not a CPCB-observation forecast. "
                         "Tree-based 80% bands are widened using recursive error growth, but they "
                         "remain heuristic and may understate real uncertainty."

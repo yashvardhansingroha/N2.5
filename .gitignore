@@ -2,10 +2,16 @@
 __pycache__/
 .pytest_cache/
 .pytest_tmp*/
+.pytest_status_check/
 *.py[cod]
 air_quality_cache.sqlite
 air_quality_cache.sqlite-shm
 air_quality_cache.sqlite-wal
+observed_data_cache.sqlite
+observed_data_cache.sqlite-shm
+observed_data_cache.sqlite-wal
+cpcb_data.csv
+data/raw/
 model_cache/
 streamlit.out.log
 streamlit.err.log
